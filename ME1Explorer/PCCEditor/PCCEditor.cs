@@ -87,7 +87,7 @@ namespace ME1Explorer
                             Link = pcc.Exports[Link - 1].LinkID;
                         else
                             Link = pcc.Imports[-Link - 1].link;
-                    }
+            }
                     t = AddPathToTree(t, LinkList);
                 }
                 for (int i = 0; i < pcc.Imports.Count; i++)
@@ -313,7 +313,7 @@ namespace ME1Explorer
                 hb2.ByteProvider = new DynamicByteProvider(pcc.Imports[n].raw);
             }
             if ((CurrentView == 2 || CurrentView == 3) && n != -1)
-            {
+        {
                 int off = pcc.Imports.Count;
                 NameIdx = pcc.Exports[n].ObjectNameID;
                 ClassIdx = pcc.Exports[n].ClassNameID;
@@ -323,10 +323,10 @@ namespace ME1Explorer
                 comboBox2.SelectedIndex = ClassIdx + off;
                 comboBox3.SelectedIndex = LinkIdx + off;
                 hb2.ByteProvider = new DynamicByteProvider(pcc.Exports[n].info);
-            }
+        }
             if (n >= 0)
-            {
-                Status.Text = "Class: " + pcc.Exports[n].ClassName + " Flags: 0x" + pcc.Exports[n].flagint.ToString("X8");
+        {
+            Status.Text = "Class: " + pcc.Exports[n].ClassName + " Flags: 0x" + pcc.Exports[n].flagint.ToString("X8");
             }
             else
             {
@@ -336,13 +336,13 @@ namespace ME1Explorer
         }
 
         public void PreviewProps()
-        {
+                {
             int n = GetSelected();
             if (n == -1 || !(CurrentView == 2 || CurrentView == 3))
                 return;
             List<PropertyReader.Property> p;
             switch (pcc.Exports[n].ClassName)
-            {
+                    {
                 default:
                     byte[] buff = pcc.Exports[n].Data;
                     p = PropertyReader.getPropList(pcc, buff);
@@ -520,5 +520,14 @@ namespace ME1Explorer
             Preview();
         }
 
+        private void rawToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Preview();
+        }
+
+        private void propertiesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Preview();
+        }
     }
 }

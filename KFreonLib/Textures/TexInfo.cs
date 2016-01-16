@@ -287,7 +287,7 @@ namespace KFreonLib.Textures
                     try
                     {
                         using (MemoryStream ms = new MemoryStream(temptex2D.GetImageData()))
-                            if (ImageEngine.GenerateThumbnailToFile(ms, tempthumbpath, 64))
+                            if (ImageEngine.GenerateThumbnailToFile(ms, tempthumbpath, 128))
                                 thumbnailPath = tempthumbpath;
                     }
                     catch { }  // KFreon: Don't really care about failures
@@ -379,7 +379,8 @@ namespace KFreonLib.Textures
             get
             {
                 // KFreon: The ImageEngine ignores mips for the most part. It'll just make its own as required.
-                return true;
+                // KFreon: By request of CreeperLava, I've re-enabled mip notifications
+                //return true;
 
 
                 bool standard = (ExpectedMips > 1 && NumMips > 1) || (ExpectedMips <= 1 && NumMips <= 1);
@@ -394,7 +395,7 @@ namespace KFreonLib.Textures
             {
                 string expected = ExpectedFormat.ToLowerInvariant();
                 string given = Format.ToLowerInvariant();
-                return (expected.Contains("pf_norm") && given.Contains("ati")) || (expected.Contains("ati") && given.Contains("pf_norm")) || expected.Contains(given);
+                return (expected.Contains("pf_norm") && given.Contains("ati")) || (expected.Contains("ati") && given.Contains("pf_norm")) || expected.Contains(given) || given.Contains(expected);
             }
         }
 
@@ -402,6 +403,7 @@ namespace KFreonLib.Textures
         {
             get
             {
+                ValidDimensions = ValidateDimensions();
                 return isDef ? false : (CorrectMips && ValidFormat && ValidDimensions);
             }
         }
@@ -545,7 +547,10 @@ namespace KFreonLib.Textures
                 string ending = " <----";
 
                 if (Path.GetExtension(this.FileName) != ".dds")
+                {
                     ending += "NOT DDS FORMAT";
+                    text = "----> " + text + ending;
+                }
                 else if (!isDef && !Valid)
                 {
                     if (!ValidDimensions)
@@ -693,7 +698,7 @@ namespace KFreonLib.Textures
             ExpectedMips = treetex.NumMips;
             ExpectedFormat = treetex.Format.Replace("PF_", "");
             if (ExpectedFormat.ToUpperInvariant().Contains("NORMALMAP"))
-                ExpectedFormat = "ThreeDC";
+                ExpectedFormat = "ATI2_3Dc";
 
             if (ExpectedFormat.ToUpperInvariant().Contains("A8R8G8B8"))
                 ExpectedFormat = "ARGB";
@@ -748,17 +753,15 @@ namespace KFreonLib.Textures
             {
                 // KFreon: Check formatting etc
                 try
-                {
-                    using (MemoryStream ms = new MemoryStream(data))
+                { 
+                    using (ImageEngineImage image = new ImageEngineImage(data))
                     {
-                        using (ImageEngineImage image = new ImageEngineImage(ms, null))
-                        {
-                            NumMips = image.NumMipMaps;
-                            Height = image.Height;
-                            Width = image.Width;
-                            Format = image.Format.InternalFormat.ToString().Replace("DDS_", "");
-                            image.Save(Thumbnail, ImageEngineFormat.JPG, false, 64);
-                        }
+                        NumMips = image.NumMipMaps;
+                        Height = image.Height;
+                        Width = image.Width;
+                        Format = image.Format.InternalFormat.ToString().Replace("DDS_", "");
+
+                        image.Save(Thumbnail, ImageEngineFormat.JPG, false, 64);
                     }
                 }
                 catch(Exception e)
@@ -784,7 +787,9 @@ namespace KFreonLib.Textures
 
         public string Autofixedpath(string TemporaryPath)
         {
-            return Path.Combine(Path.Combine(TemporaryPath, "Autofixed"), FileName);   
+            Format format = ImageFormats.FindFormatInString(ExpectedFormat);
+            string newfilename = String.IsNullOrEmpty(ExpectedFormat) ? FileName : Path.ChangeExtension(FileName, ImageFormats.GetExtensionOfFormat(format.InternalFormat));
+            return Path.Combine(Path.Combine(TemporaryPath, "Autofixed"), newfilename);   
         }
 
         public bool ValidateDimensions()

@@ -90,6 +90,8 @@ namespace ME3Explorer
         Gooey gooey;
         bool cancelling = true;
 
+        Dictionary<string, Bitmap> Previews = new Dictionary<string, Bitmap>();
+
 
         private void SaveProperties()
         {
@@ -212,6 +214,7 @@ namespace ME3Explorer
             gooey.AddControl(ChangeButton, "ChangeButton", true);
             gooey.AddControl(regenerateThumbnailsToolStripMenuItem, "regenerate", true);
             gooey.AddControl(startTPFModeToolStripMenuItem, "TPFMode", true);
+            gooey.AddControl(addDLCToTreeToolStripMenuItem, "addDLC", true);
         }
 
         private bool SaveFile(List<string> Filenames, List<int> ExpIDs, Textures.ITexture2D tex2D, int j)
@@ -278,15 +281,15 @@ namespace ME3Explorer
                         using (Textures.ITexture2D tex2D = tex.Textures[0])
                         {
                             // KFreon: Save first file
-                            PCCObjects.IExportEntry expEntry = pcc.Exports[tex2D.pccExpIdx];
+                            /*PCCObjects.IExportEntry expEntry = pcc.Exports[tex2D.pccExpIdx];
                             expEntry.SetData(tex2D.ToArray(expEntry.DataOffset, pcc));
-                            pcc.saveToFile(pcc.pccFileName);
+                            pcc.saveToFile(pcc.pccFileName);*/
 
-                            this.Invoke(new Action(() => MainProgressBar.Increment(1)));
-                            OutputBoxPrintLn("Initial saving complete for " + tex.TexName + ". Now saving remaining PCC's for this texture...");
+                            /*this.Invoke(new Action(() => MainProgressBar.Increment(1)));
+                            OutputBoxPrintLn("Initial saving complete for " + tex.TexName + ". Now saving remaining PCC's for this texture...");*/
 
-                            // KFreon: Save rest of files
-                            for (int j = 1; j < tex.Files.Count; j++)
+                            // KFreon: Save files
+                            for (int j = 0; j < tex.Files.Count; j++)
                             {
                                 if (!SaveFile(tex.Files, tex.ExpIDs, tex2D, j))
                                     return false;
@@ -1219,10 +1222,19 @@ namespace ME3Explorer
                     PCCsCheckedListBox.SetItemChecked(i, PCCsCheckedListBox.GetItemChecked(0));
             else
                 PCCsCheckedListBox.SetItemChecked(0, false);
+
             List<string> newlist = new List<string>();
+            List<int> newlist2 = new List<int>();
             foreach (string item in PCCsCheckedListBox.CheckedItems)
-                newlist.Add(item.Split('@')[0].Trim());
+            {
+                var bits = item.Split('@');
+                newlist.Add(bits[0].Trim());
+                newlist2.Add(Convert.ToInt32(bits[1]));
+            }
             current.Files = new List<string>(newlist);
+            current.ExpIDs = new List<int>(newlist2);
+
+
             Tree.ReplaceTex(GetSelectedTexInd(), current);
         }
 
@@ -1308,11 +1320,13 @@ namespace ME3Explorer
                     {
                         bool hasMips = true;
                         ImageFile imgFile = im;
-                        try { ImageMipMapHandler imgMipMap = new ImageMipMapHandler("", imgdata); }
+                        /*try { ImageMipMapHandler imgMipMap = new ImageMipMapHandler("", imgdata); }
                         catch (Exception e)
                         {
                             hasMips = false;
-                        }
+                        }*/
+                        using (ImageEngineImage img = new ImageEngineImage(imgdata))
+                            hasMips = img.NumMipMaps > 1;
 
 
                         if (!hasMips)
@@ -1415,7 +1429,7 @@ namespace ME3Explorer
 
             // KFreon: Update DLC TOCs
             // Updated by MrFob - crude for now as a TOC.bin update should be enough but it works.
-            if (WhichGame == 3)
+            if (WhichGame == 3 && modifiedDLC != null && modifiedDLC.Count > 0)
             {
                 List<string> files = new List<string>(Directory.EnumerateFiles(DLCPath, "Default.sfar", SearchOption.AllDirectories));
                 DebugOutput.PrintLn("Updating DLC...");
@@ -1557,13 +1571,17 @@ namespace ME3Explorer
             for (int i = 0; i < SelectedNode.TexInds.Count; i++)
             {
                 TreeTexInfo tex = Tree.GetTex(SelectedNode.TexInds[i]);
-                int ind = i + 1;
+                int ind = 0;
+
+                bool FoundImage = false;
 
                 // KFreon: If no thumbnail, try again
                 if (tex.ThumbnailPath == null)
-                {
-                    ind = 0;
                     continue;
+                else if (File.Exists(tex.ThumbnailPath))
+                {
+                    FoundImage = true;
+                    ind = i + 1;
                 }
                 else if (tex.ThumbnailPath.Contains("placeholder.ico") && !tex.TriedThumbUpdate)
                 {
@@ -1583,6 +1601,7 @@ namespace ME3Explorer
                                         {
                                             ind = i + 1;
                                             tex.ThumbnailPath = savepath;
+                                            FoundImage = true;
                                         }
                                         else
                                         {
@@ -1591,11 +1610,11 @@ namespace ME3Explorer
                                                 byte[] data = UsefulThings.WinForms.Imaging.GetPixelDataFromBitmap(img);
                                                 ImageEngine.GenerateThumbnailToFile(new MemoryStream(data), savepath, 128);
                                                 tex.ThumbnailPath = savepath;
+                                                FoundImage = true;
                                                 ind = i + 1;
                                             }
                                             catch
                                             {
-                                                ind = 0;
                                                 // IGNORE
                                             }
                                         }
@@ -1603,28 +1622,29 @@ namespace ME3Explorer
                                         Tree.ReplaceTex(SelectedNode.TexInds[i], tex);
                                     }
                                 }
-                            }                                
+                            }
                         }
                     }
                     catch (Exception e)
                     {
-                        thumbs.Add(new Bitmap(1,1));
+                        thumbs.Add(new Bitmap(1, 1));
                     }
                 }
 
                 Image thumb;
-                try
-                {
-                    //thumb = Textures.Methods.FixThumb(Image.FromFile(tex.ThumbnailPath), 128);
-                    /*using (FileStream fs = new FileStream(tex.ThumbnailPath, FileMode.Open))
+                if (FoundImage)
+                    try
                     {
-                        //var stream = ImageEngine.GenerateThumbnailToStream(fs, 128);
-                        thumb = Image.FromStream(fs);
-                    }*/
-                    thumb = Image.FromFile(tex.ThumbnailPath);
-                    thumbs.Add(thumb);
-                }
-                catch
+                        thumb = UsefulThings.WinForms.Imaging.PadImageToSquare(tex.ThumbnailPath, 128);
+                        thumbs.Add(thumb);
+                    }
+                    catch
+                    {
+                        FoundImage = false;  // Kfreon: Set flag for later denoting that the image failed to work properly
+                    }
+
+                // KFreon: Double I know, but this way, I can set the image to the placefinder image for a variety of situations
+                if (!FoundImage)
                 {
                     DebugOutput.PrintLn("Thumbnail: " + tex.ThumbnailPath + "  not found.");
                     ind = 0;
@@ -2028,20 +2048,41 @@ namespace ME3Explorer
 
         private void MainListView_DoubleClick(object sender, EventArgs e)
         {
+            MainPictureBox.Image = null; // KFreon: Reset image
+
             if (MainListView.SelectedItems.Count <= 0)
                 return;
 
-            TreeTexInfo tex = Tree.GetTex(GetSelectedTexInd());
-            Bitmap img = tex.GetImage(pathBIOGame, 512);
 
+            if (Previews.Count > 10)
+            {
+                var prev = Previews.First();
+                prev.Value.Dispose();
+                Previews.Remove(prev.Key);
+            }
+
+
+            TreeTexInfo tex = Tree.GetTex(GetSelectedTexInd());
+            string key = tex.TexName + tex.Hash;
+
+            // Get from cache if available
+            if (Previews.ContainsKey(key))
+            {
+                MainPictureBox.Image = Previews[key];
+                MainPictureBox.Refresh();
+                MainListView.Visible = false;
+                return;
+            }
+
+            Bitmap img = tex.GetImage(pathBIOGame, 512);
+            
             // KFreon: Show image
             if (img != null)
             {
-                if (MainPictureBox.Image != null)
-                    MainPictureBox.Image.Dispose();
                 MainPictureBox.Image = img;
                 MainPictureBox.Refresh();
                 MainListView.Visible = false;
+                Previews.Add(key, img);
             }
             else
                 MessageBox.Show("Unknown DDS image. Contact KFreon.");
@@ -2093,7 +2134,7 @@ namespace ME3Explorer
             // KFreon: Check replacing texture
             using (ImageEngineImage img = new ImageEngineImage(path))
             {
-                if (img.Format.InternalFormat.ToString().Contains(tex2D.texFormat, StringComparison.OrdinalIgnoreCase))
+                if (!img.Format.InternalFormat.ToString().Contains(tex2D.texFormat, StringComparison.OrdinalIgnoreCase))
                     sb.Append("Invalid format. Selected image is: " + img.Format.InternalFormat.ToString() + "  Required: " + tex2D.texFormat.ToUpperInvariant());
 
                 if (img.NumMipMaps < tex2D.Mips)
@@ -2407,6 +2448,7 @@ namespace ME3Explorer
                 }
             }
 
+            Directory.CreateDirectory(ThumbnailPath);
 
             // KFreon: Update tex details if necessary
             Textures.ITexture2D tex2D = null;
@@ -2414,11 +2456,18 @@ namespace ME3Explorer
 
             string thumbpath = tex.ThumbnailPath ?? Path.Combine(ThumbnailPath, tex.ThumbName);
 
-            if (FromFile)
-                Textures.Creation.GenerateThumbnail(tex.Files[0], WhichGame, tex.ExpIDs[0], pathBIOGame, thumbpath, ExecFolder);
-            else
-                using (MemoryStream ms = new MemoryStream(tex2D.GetImageData()))
-                    ImageEngine.GenerateThumbnailToFile(ms, thumbpath, 128);
+            try
+            {
+                if (FromFile)
+                    Textures.Creation.GenerateThumbnail(tex.Files[0], WhichGame, tex.ExpIDs[0], pathBIOGame, thumbpath, ExecFolder);
+                else
+                    using (MemoryStream ms = new MemoryStream(tex2D.GetImageData()))
+                        ImageEngine.GenerateThumbnailToFile(ms, thumbpath, 128);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Error generating thumbnail: " + e.Message);
+            }
 
             Tree.ReplaceTex(index, tex);
         }
@@ -2720,17 +2769,28 @@ namespace ME3Explorer
             Tree.AddPCCs(pccs);
             ConcurrentBag<string> errors = ScanPCCList(false, pccs);
             Tree.WriteToFile(Tree.TreePath, Path.GetDirectoryName(pathBIOGame));
+
+            if (errors != null && errors.Count != 0)
+                MessageBox.Show("Errors occured!" + Environment.NewLine + String.Join(Environment.NewLine, errors), "Your technology is based on that of the Mass Relays...", MessageBoxButtons.OK);
         }
 
         private void addDLCToTreeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<string> pccs = new List<string>();
+            using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = "Select DLC Folder to add. (e.g. DLC_CON_END)";
+                if (fbd.ShowDialog() != DialogResult.OK)
+                    return;
 
-            // KFreon: Scan DLC PCC's
-            MessageBox.Show("Not implemented just yet.");
-            return;
+                pccs = Directory.EnumerateFiles(fbd.SelectedPath, "*.pcc", SearchOption.AllDirectories).ToList();
+            }
 
-            AddDLCToTree(pccs);
+            backbone.AddToBackBone(b =>
+            {
+                AddDLCToTree(pccs);
+                return true;
+            });
         }
     }
 }

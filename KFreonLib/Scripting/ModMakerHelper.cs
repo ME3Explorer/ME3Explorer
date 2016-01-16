@@ -325,8 +325,8 @@ namespace KFreonLib.Scripting
                 if (WhichGame == -1 && update)
                 {
                     DebugOutput.PrintLn("Attempting to guess game version...");
-                    int index = PCCs[0].IndexOf("Mass Effect");
-                    char c = PCCs[0][index + 1];
+                    /*int index = PCCs[0].IndexOf("Mass Effect");
+                    char c = PCCs[0][index + 1];*/
 
                     DebugOutput.PrintLn("Found num PCCS: " + PCCs.Count);
                     WhichGame = GuessGame(PCCs);
@@ -474,21 +474,10 @@ namespace KFreonLib.Scripting
             public Image GenerateJobThumbnail()
             {
                 DebugOutput.PrintLn("Generating thumbnail for: " + this.Name);
-                //Bitmap bmp = Textures.Methods.GetImage("doesnt matter", data);  // KFreon: Doesn't matter cos I gave it data instead of a file.
-                //bmp = Textures.Creation.GenerateThumbImage(bmp, 64);
-                /*using (ResILImageBase img = ResILImageBase.Create(data))
-                    return img.ToWinFormsBitmap(64, 64);*/
-                Bitmap bmp = null;
-                using (MemoryStream stream = new MemoryStream(data))
-                {
-                    using (MemoryStream savestream = new MemoryStream())
-                    {
-                        using (ImageEngineImage img = new ImageEngineImage(stream, ".dds", 64, false))
-                            img.Save(savestream, ImageEngineFormat.JPG, false);
 
-                        bmp = UsefulThings.WinForms.Imaging.CreateBitmap(savestream.ToArray(), 64, 64);
-                    }
-                }
+                Bitmap bmp = null;
+                using (ImageEngineImage img = new ImageEngineImage(data, 64, false))
+                    bmp = img.GetGDIBitmap(true, 64);
 
                 return bmp;
             }
@@ -990,7 +979,7 @@ namespace KFreonLib.Scripting
             }
             else
             {
-                texname = "Some Mesh";
+                texname = "Binary/Mesh";
             }
             
             return texname;
@@ -1052,8 +1041,8 @@ namespace KFreonLib.Scripting
             KFreonLib.Scripting.ModMaker.ModJob mj = new KFreonLib.Scripting.ModMaker.ModJob();
 
             // KFreon: Get replacing data
-            byte[] buff = null;
-            if (data != null)
+            byte[] buff = data;
+            if (data == null)
             {
                 FileStream fs = new FileStream(newfile, FileMode.Open, FileAccess.Read);
                 buff = new byte[fs.Length];
@@ -1062,8 +1051,6 @@ namespace KFreonLib.Scripting
                 while ((cnt = fs.Read(buff, sum, buff.Length - sum)) > 0) sum += cnt;
                 fs.Close();
             }
-            else
-                buff = data;
             
 
             string currfile = Path.GetFileName(pccname);

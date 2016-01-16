@@ -76,8 +76,8 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="UsefulThings, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UsefulCSharpThings.1.4.0.0\lib\net45\UsefulThings.dll</HintPath>
+    <Reference Include="UsefulThings, Version=1.5.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\UsefulCSharpThings.1.5.3.0\lib\net45\UsefulThings.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsBase" />
@@ -233,6 +233,15 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\save_gameoperator_64x64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\save_gameeditor_64x64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\package_editor_64x64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

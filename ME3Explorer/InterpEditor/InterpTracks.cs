@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using UMD.HCIL.Piccolo.Nodes;
 using UMD.HCIL.Piccolo;
 using UMD.HCIL.Piccolo.Event;
-using UMD.HCIL.Piccolo.Nodes;
 
 namespace ME3Explorer.InterpEditor
 {

@@ -101,6 +101,8 @@ namespace ME3Explorer
         List<SaltTPF.ZipReader> zippys = new List<SaltTPF.ZipReader>();
         List<object> FormControls = new List<object>();
 
+        Dictionary<string, Bitmap> Previews = new Dictionary<string, Bitmap>();
+
         TextUpdater Overall;
         TextUpdater Current;
         ProgressBarChanger OverallProg;
@@ -685,6 +687,7 @@ namespace ME3Explorer
                         try
                         {
                             Bitmap bmp = new Bitmap(curr.Thumbnail);
+                            bmp = UsefulThings.WinForms.Imaging.PadImageToSquare(bmp, 64);
                             curr.ThumbInd = MainTreeViewImageList.Images.Count;
                             MainTreeViewImageList.Images.Add(bmp);
                         }
@@ -944,10 +947,7 @@ namespace ME3Explorer
                 if (PreviewBox.InvokeRequired)
                     this.Invoke(new Action(() => ClearPreview()));
                 else if (PreviewBox.Image != null)
-                {
-                    PreviewBox.Image.Dispose();
                     PreviewBox.Image = null;
-                }
             }
             catch { }
         }
@@ -956,6 +956,31 @@ namespace ME3Explorer
         {
             // KFreon: Clear old image
             ClearPreview();
+
+            // Clean cache if required
+            if (Previews.Keys.Count > 10)
+            {
+                var img = Previews.First();
+                img.Value.Dispose();
+                Previews.Remove(img.Key);
+            }
+
+            // KFreon: Gather from cache if available
+            string key = tex.FileName + tex.TexName + tex.Hash;
+            if (Previews.ContainsKey(key))
+            {
+                Bitmap img = Previews[key];
+                try
+                {
+                    this.Invoke(new Action(() => PreviewBox.Image = img));
+                }
+                catch (ObjectDisposedException)
+                { } // DOn't care - it's when the form is closing. The form can become disposed while the preview is trying to be shown.
+
+                DisappearTextBox(true);
+                return;
+            }
+
 
             // KFreon: Get data
             byte[] data = tex.Extract(null, true);
@@ -980,11 +1005,11 @@ namespace ME3Explorer
             {
                 Bitmap img = null;
                 using (MemoryStream ms = new MemoryStream(data))
-                    using (ImageEngineImage image = new ImageEngineImage(ms, null, 512, true))
-                        img = image.GetGDIBitmap();
+                    using (ImageEngineImage image = new ImageEngineImage(ms, null, 512, false))
+                        img = image.GetGDIBitmap(true, 512);
 
                 this.Invoke(new Action(() => PreviewBox.Image = img));
-
+                Previews.Add(key, img);
                 DisappearTextBox(true);
             }
         }
@@ -1570,6 +1595,7 @@ namespace ME3Explorer
                     case ".tga":
                     case ".jpg":
                     case ".png":
+                    case ".bmp":
                         ValidDrops.Add(file);
                         break;
                     default:
@@ -1604,7 +1630,10 @@ namespace ME3Explorer
                 // KFreon: Reset picturebox
                 if (PreviewBox.Image != null)
                 {
-                    PreviewBox.Image.Dispose();
+                    foreach (var preview in Previews)
+                        preview.Value.Dispose();
+
+                    Previews.Clear();
                     PreviewBox.Image = null;
                     PreviewBox.Refresh();
                 }
@@ -1742,20 +1771,21 @@ namespace ME3Explorer
                 return false;
             }
 
-            TPFTexInfo tex;
-            int index = ind == -1 ? GetSelectedTex(out tex) : ind;
-
             // KFreon: Wipe out nodes to stop preview glitch
-            MainTreeView.Nodes.Clear();
+            //MainTreeView.SuspendLayout();
+            //MainTreeView.Nodes.Clear();
             ClearPreview();
             FirstHalfInfoState(false);
 
-            // KFreon: Remove from lists
-            MainTreeView.SuspendLayout();
-            LoadedTexes.RemoveAt(index);
+            TPFTexInfo tex;
+            int index = ind == -1 ? GetSelectedTex(out tex) : ind;
 
-            RedrawTreeView();
-            MainTreeView.ResumeLayout();
+            // KFreon: Remove from lists
+            LoadedTexes.RemoveAt(index);
+            MainTreeView.Nodes.RemoveAt(index);
+
+            //RedrawTreeView();
+            //MainTreeView.ResumeLayout();
             return true;
         }
 
@@ -1770,8 +1800,15 @@ namespace ME3Explorer
 
             string text = e.Node.Text;
             myTreeNode nod = (e.Node as myTreeNode);
-            TPFTexInfo curr = nod.TexInd == -1 ? LoadedTexes[nod.TexInds[0]].FileDuplicates[nod.TexInds[1]] : LoadedTexes[nod.TexInd];
 
+            /*try
+            {
+                TPFTexInfo curr = nod.TexInd == -1 ? LoadedTexes[nod.TexInds[0]].FileDuplicates[nod.TexInds[1]] : LoadedTexes[nod.TexInd];
+            }
+            catch (Exception e)
+            {
+                DebugOutput.PrintLn("Failure in TPFTools Tree DrawNode:" + e.Message);
+            }*/
 
             TextRenderer.DrawText(e.Graphics, text, font, e.Node.Bounds, Color.Black, TextFormatFlags.VerticalCenter);
         }
@@ -2714,6 +2751,8 @@ namespace ME3Explorer
             return retval;
         }
 
+        
+
         private bool AutofixInternal(TPFTexInfo tex)
         {
             bool retval = false;
@@ -2725,8 +2764,13 @@ namespace ME3Explorer
             tex.FilePath = Path.GetDirectoryName(tex.Autofixedpath(TemporaryPath));
 
             using (ImageEngineImage img = new ImageEngineImage(imgData))
-                retval = img.Save(path, ImageEngine.ParseFromString(tex.ExpectedFormat), tex.NumMips != tex.ExpectedMips);
+            {
+                var destFormat = ImageEngine.ParseFromString(tex.ExpectedFormat);
+                img.Resize(UsefulThings.General.RoundToNearestPowerOfTwo(img.Width));
+                retval = img.Save(path, destFormat, tex.NumMips != tex.ExpectedMips);
+            }
 
+            tex.FileName = Path.GetFileName(path);
 
             // Heff: Cancellation check
             if (cts.IsCancellationRequested)
@@ -2739,65 +2783,9 @@ namespace ME3Explorer
             if (tex.ExpectedMips > 1 && (tex.NumMips < tex.ExpectedMips || tex.NumMips < TPFTexInfo.CalculateMipCount(tex.Width, tex.Height)))
                 tex.NumMips = Math.Max(tex.ExpectedMips, TPFTexInfo.CalculateMipCount(tex.Width, tex.Height));
 
+            tex.AutofixSuccess = retval;
             return retval;
         }
-
-        /*private string ExecuteExternalTool(string filepath, string arguments)
-        {
-            Process proc = new Process();
-
-            proc.StartInfo.UseShellExecute = false;
-            proc.StartInfo.CreateNoWindow = true;
-            proc.StartInfo.RedirectStandardOutput = true;
-            proc.StartInfo.FileName = filepath;
-            proc.StartInfo.Arguments = arguments;
-            proc.Start();
-
-            string cmdoutput = proc.StandardOutput.ReadToEnd();
-            proc.WaitForExit();
-            return cmdoutput;
-        }*/
-
-        /*private bool MoveToTempAndConvert(TPFTexInfo tex, string path, string[] sourceFormats)
-        {
-            if (!sourceFormats.Any(f => tex.FileName.EndsWith(f)))
-            {
-                //Heff: If the source format is some type that's not supported by the nvidia dds tool, try to convert via ResIL:
-                byte[] arr = tex.Extract(null, true);
-                path = Path.ChangeExtension(path, ".tga");
-                tex.FilePath = Path.GetDirectoryName(path);
-                tex.FileName = Path.ChangeExtension(tex.FileName, ".tga");
-                using (ResILImageBase img = ResILImageBase.Create(arr))
-                {
-                    // Heff: Convert all formats to TGA for smallest possible quality loss:
-                    bool success = img.ConvertAndSave(ResIL.Unmanaged.ImageType.Tga, path, MipsMode: ResILImageBase.MipMapMode.RemoveAllButOne);
-                    if (!success)
-                    {
-                        MessageBox.Show("Could not convert the following format: " + tex.ExpectedFormat + " | Please report this on the me3explorer forums.");
-                        DebugOutput.PrintLn("Autofix failed on image: " + tex.TexName);
-                        tex.AutofixSuccess = false;
-                        return false;
-                    }
-                }
-            }
-            /*else
-            {
-                try
-                {
-                    // Heff: can we always assume that overwriting is okay? Or will we have problems with files of the same name?
-                    File.Copy(tex.FilePath + "\\" + tex.FileName, path, true);
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Could not copy temporary file to: " + path + " | Make sure that you have sufficient hard drive space and that ME3Explorer is run as admin. ("
-                        + e.Message + ")");
-                    DebugOutput.PrintLn("Autofix failed on image: " + tex.TexName);
-                    tex.AutofixSuccess = false;
-                    return false;
-                }
-            }*/
-            /*return true;
-        }*/
 
         private void AutofixInstallButton_Click(object sender, EventArgs e)
         {
@@ -2855,6 +2843,9 @@ namespace ME3Explorer
         {
             TPFTexInfo tex;
             int index = GetSelectedTex(out tex);
+            if (tex == null)
+                return;
+
             bool res = await Task<bool>.Run(() => InstallTextures(new List<TPFTexInfo>() { tex }, true));
             if (!res)
             {
