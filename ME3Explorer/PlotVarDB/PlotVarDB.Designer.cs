@@ -1,4 +1,6 @@
-﻿namespace ME3Explorer.PlotVarDB
+﻿using System.Windows.Forms;
+
+namespace ME3Explorer.PlotVarDB
 {
     partial class PlotVarDB
     {
@@ -34,37 +36,34 @@
             this.newDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.addPlotVarDescriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sortToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.byIDToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.byTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.byDescriptionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.ME1Button = new System.Windows.Forms.ToolStripButton();
+            this.ME2Button = new System.Windows.Forms.ToolStripButton();
+            this.ME3Button = new System.Windows.Forms.ToolStripButton();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.status = new System.Windows.Forms.ToolStripStatusLabel();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.plotVarTable = new System.Windows.Forms.DataGridView();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.deleteRowButton = new System.Windows.Forms.ToolStripButton();
+            this.plotIDColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.varTypeColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.descriptionColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.plotVarTable)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.editToolStripMenuItem,
-            this.sortToolStripMenuItem});
+            this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(292, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(514, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             this.menuStrip1.Visible = false;
@@ -100,113 +99,54 @@
             this.saveDatabaseToolStripMenuItem.Text = "Save Database";
             this.saveDatabaseToolStripMenuItem.Click += new System.EventHandler(this.saveDatabaseToolStripMenuItem_Click);
             // 
-            // editToolStripMenuItem
-            // 
-            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.addPlotVarDescriptionToolStripMenuItem,
-            this.editToolStripMenuItem1,
-            this.removeToolStripMenuItem});
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.editToolStripMenuItem.Text = "Edit";
-            // 
-            // addPlotVarDescriptionToolStripMenuItem
-            // 
-            this.addPlotVarDescriptionToolStripMenuItem.Name = "addPlotVarDescriptionToolStripMenuItem";
-            this.addPlotVarDescriptionToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
-            this.addPlotVarDescriptionToolStripMenuItem.Text = "Add";
-            this.addPlotVarDescriptionToolStripMenuItem.Click += new System.EventHandler(this.addPlotVarDescriptionToolStripMenuItem_Click);
-            // 
-            // editToolStripMenuItem1
-            // 
-            this.editToolStripMenuItem1.Name = "editToolStripMenuItem1";
-            this.editToolStripMenuItem1.Size = new System.Drawing.Size(117, 22);
-            this.editToolStripMenuItem1.Text = "Edit";
-            this.editToolStripMenuItem1.Click += new System.EventHandler(this.editToolStripMenuItem1_Click);
-            // 
-            // removeToolStripMenuItem
-            // 
-            this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
-            this.removeToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
-            this.removeToolStripMenuItem.Text = "Remove";
-            this.removeToolStripMenuItem.Click += new System.EventHandler(this.removeToolStripMenuItem_Click);
-            // 
-            // sortToolStripMenuItem
-            // 
-            this.sortToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.byIDToolStripMenuItem,
-            this.byTypeToolStripMenuItem,
-            this.byDescriptionToolStripMenuItem});
-            this.sortToolStripMenuItem.Name = "sortToolStripMenuItem";
-            this.sortToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
-            this.sortToolStripMenuItem.Text = "Sort";
-            // 
-            // byIDToolStripMenuItem
-            // 
-            this.byIDToolStripMenuItem.Name = "byIDToolStripMenuItem";
-            this.byIDToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
-            this.byIDToolStripMenuItem.Text = "by ID";
-            this.byIDToolStripMenuItem.Click += new System.EventHandler(this.byIDToolStripMenuItem_Click);
-            // 
-            // byTypeToolStripMenuItem
-            // 
-            this.byTypeToolStripMenuItem.Name = "byTypeToolStripMenuItem";
-            this.byTypeToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
-            this.byTypeToolStripMenuItem.Text = "by Type";
-            this.byTypeToolStripMenuItem.Click += new System.EventHandler(this.byTypeToolStripMenuItem_Click);
-            // 
-            // byDescriptionToolStripMenuItem
-            // 
-            this.byDescriptionToolStripMenuItem.Name = "byDescriptionToolStripMenuItem";
-            this.byDescriptionToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
-            this.byDescriptionToolStripMenuItem.Text = "by Description";
-            this.byDescriptionToolStripMenuItem.Click += new System.EventHandler(this.byDescriptionToolStripMenuItem_Click);
-            // 
             // toolStrip1
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton2,
-            this.toolStripButton3,
-            this.toolStripButton4,
+            this.ME1Button,
+            this.ME2Button,
+            this.ME3Button,
+            this.toolStripSeparator1,
             this.toolStripTextBox1,
-            this.toolStripButton1});
+            this.toolStripButton1,
+            this.toolStripSeparator2,
+            this.deleteRowButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(292, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(514, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripButton2
+            // ME1Button
             // 
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(34, 22);
-            this.toolStripButton2.Text = "ME1";
-            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
+            this.ME1Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.ME1Button.Image = ((System.Drawing.Image)(resources.GetObject("ME1Button.Image")));
+            this.ME1Button.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ME1Button.Name = "ME1Button";
+            this.ME1Button.Size = new System.Drawing.Size(34, 22);
+            this.ME1Button.Text = "ME1";
+            this.ME1Button.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
-            // toolStripButton3
+            // ME2Button
             // 
-            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton3.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton3.Image")));
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(34, 22);
-            this.toolStripButton3.Text = "ME2";
-            this.toolStripButton3.Click += new System.EventHandler(this.toolStripButton3_Click);
+            this.ME2Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.ME2Button.Image = ((System.Drawing.Image)(resources.GetObject("ME2Button.Image")));
+            this.ME2Button.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ME2Button.Name = "ME2Button";
+            this.ME2Button.Size = new System.Drawing.Size(34, 22);
+            this.ME2Button.Text = "ME2";
+            this.ME2Button.Click += new System.EventHandler(this.toolStripButton3_Click);
             // 
-            // toolStripButton4
+            // ME3Button
             // 
-            this.toolStripButton4.Checked = true;
-            this.toolStripButton4.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.toolStripButton4.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
-            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton4.Name = "toolStripButton4";
-            this.toolStripButton4.Size = new System.Drawing.Size(34, 22);
-            this.toolStripButton4.Text = "ME3";
-            this.toolStripButton4.Click += new System.EventHandler(this.toolStripButton4_Click);
+            this.ME3Button.Checked = true;
+            this.ME3Button.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ME3Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.ME3Button.Image = ((System.Drawing.Image)(resources.GetObject("ME3Button.Image")));
+            this.ME3Button.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ME3Button.Name = "ME3Button";
+            this.ME3Button.Size = new System.Drawing.Size(34, 22);
+            this.ME3Button.Text = "ME3";
+            this.ME3Button.Click += new System.EventHandler(this.toolStripButton4_Click);
             // 
             // toolStripTextBox1
             // 
@@ -228,9 +168,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.status});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 251);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 262);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(292, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(514, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -239,24 +179,75 @@
             this.status.Name = "status";
             this.status.Size = new System.Drawing.Size(0, 17);
             // 
-            // listBox1
+            // plotVarTable
             // 
-            this.listBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listBox1.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.IntegralHeight = false;
-            this.listBox1.ItemHeight = 16;
-            this.listBox1.Location = new System.Drawing.Point(0, 25);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(292, 226);
-            this.listBox1.TabIndex = 3;
+            this.plotVarTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.plotVarTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.plotIDColumn,
+            this.varTypeColumn,
+            this.descriptionColumn});
+            this.plotVarTable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.plotVarTable.Location = new System.Drawing.Point(0, 25);
+            this.plotVarTable.MultiSelect = false;
+            this.plotVarTable.Name = "plotVarTable";
+            this.plotVarTable.Size = new System.Drawing.Size(514, 237);
+            this.plotVarTable.TabIndex = 4;
+            this.plotVarTable.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.plotVarTable_CellValidating);
+            this.plotVarTable.KeyDown += new System.Windows.Forms.KeyEventHandler(this.plotVarTable_KeyDown);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // deleteRowButton
+            // 
+            this.deleteRowButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.deleteRowButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteRowButton.Image")));
+            this.deleteRowButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.deleteRowButton.Name = "deleteRowButton";
+            this.deleteRowButton.Size = new System.Drawing.Size(70, 22);
+            this.deleteRowButton.Text = "Delete Row";
+            this.deleteRowButton.Click += new System.EventHandler(this.deleteRowButton_Click);
+            // 
+            // plotIDColumn
+            // 
+            this.plotIDColumn.Frozen = true;
+            this.plotIDColumn.HeaderText = "Plot ID";
+            this.plotIDColumn.Name = "plotIDColumn";
+            this.plotIDColumn.ToolTipText = "The ID that defines this plot element.";
+            // 
+            // varTypeColumn
+            // 
+            this.varTypeColumn.Frozen = true;
+            this.varTypeColumn.HeaderText = "Variable Type";
+            this.varTypeColumn.Items.AddRange(new object[] {
+            "Boolean",
+            "Float",
+            "Integer"});
+            this.varTypeColumn.Name = "varTypeColumn";
+            this.varTypeColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.varTypeColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.varTypeColumn.ToolTipText = "Type of value this variable holds.";
+            // 
+            // descriptionColumn
+            // 
+            this.descriptionColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.descriptionColumn.HeaderText = "Description";
+            this.descriptionColumn.Name = "descriptionColumn";
+            this.descriptionColumn.ToolTipText = "Description of the stored Plot ID value and how it is used";
             // 
             // PlotVarDB
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(292, 273);
-            this.Controls.Add(this.listBox1);
+            this.ClientSize = new System.Drawing.Size(514, 284);
+            this.Controls.Add(this.plotVarTable);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
@@ -271,6 +262,7 @@
             this.toolStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.plotVarTable)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -280,25 +272,23 @@
 
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButton2;
-        private System.Windows.Forms.ToolStripButton toolStripButton3;
-        private System.Windows.Forms.ToolStripButton toolStripButton4;
+        private System.Windows.Forms.ToolStripButton ME1Button;
+        private System.Windows.Forms.ToolStripButton ME2Button;
+        private System.Windows.Forms.ToolStripButton ME3Button;
         private System.Windows.Forms.ToolStripTextBox toolStripTextBox1;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadDatabaseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveDatabaseToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem addPlotVarDescriptionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem sortToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem byIDToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem byTypeToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem byDescriptionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem removeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newDatabaseToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel status;
-        public System.Windows.Forms.ListBox listBox1;
-        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem1;
+        private System.Windows.Forms.DataGridView plotVarTable;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripButton deleteRowButton;
+        private DataGridViewTextBoxColumn plotIDColumn;
+        private DataGridViewComboBoxColumn varTypeColumn;
+        private DataGridViewTextBoxColumn descriptionColumn;
     }
 }
