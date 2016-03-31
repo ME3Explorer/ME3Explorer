@@ -573,7 +573,7 @@ namespace ME3Explorer.PlotVarDB
 
                 while (csv.Read())
                 {
-                    var record = csv.GetRecord<PlotVarEntry>();
+                    importingEntries.Add(csv.GetRecord<PlotVarEntry>());
                 }
 
                 //csv.GetRecords<PlotVarEntry>().ToList();
