@@ -24,7 +24,7 @@ namespace ME3Explorer.PlotVarDB
         public const int COL_BROKEN = 5;
         public const int COL_ME2SPEC = 6;
         public const int COL_ME3SPEC = 7;
-        public const int COL_NOTES = 7;
+        public const int COL_NOTES = 8;
 
         public const int VARTYPE_BOOL = 0;
         public const int VARTYPE_FLOAT = 1;
@@ -38,7 +38,7 @@ namespace ME3Explorer.PlotVarDB
 
         public class PlotVarEntry
         {
-            public int ID { get; set; }
+            public int id { get; set; }
             public int type { get; set; } // 0 = bool, 1 = int, 2 = float
             public int game { get; set; } //0 = me1, 2 = me2, 3 = me3. Use consts
             public string category { get; set; }
@@ -96,7 +96,7 @@ namespace ME3Explorer.PlotVarDB
 
             foreach (PlotVarEntry p in entries)
             {
-                object[] row = new object[] { p.ID.ToString(), TypeToString(p.type), GameToString(p.game), p.category, p.state, p.broken, p.me2id > 0 ? p.me2id.ToString() : "", p.me3id > 0 ? p.me3id.ToString() : "", p.notes };
+                object[] row = new object[] { p.id.ToString(), TypeToString(p.type), GameToString(p.game), p.category, p.state, p.broken, p.me2id > 0 ? p.me2id.ToString() : "", p.me3id > 0 ? p.me3id.ToString() : "", p.notes };
                 plotVarTable.Rows.Add(row);
             }
             //    listBox1.Items.Add("ID: " + p.ID + " TYPE: " + TypeToString(p.type) + " DESCRIPTION: " + p.Desc);
@@ -287,7 +287,7 @@ namespace ME3Explorer.PlotVarDB
                 fs.Write(BitConverter.GetBytes(entries.Count), 0, 4);
                 foreach (PlotVarEntry p in entries)
                 {
-                    fs.Write(BitConverter.GetBytes(p.ID), 0, 4);
+                    fs.Write(BitConverter.GetBytes(p.id), 0, 4);
                     fs.Write(BitConverter.GetBytes(p.type), 0, 4);
                     fs.Write(BitConverter.GetBytes(p.game), 0, 4);
                     WriteString(fs, p.category ?? "");
@@ -310,14 +310,14 @@ namespace ME3Explorer.PlotVarDB
                 if ((string)row.Cells[COL_PLOTID].Value != null && ((string)row.Cells[COL_PLOTID].Value).Trim() != "")
                 {
                     PlotVarEntry pve = new PlotVarEntry();
-                    pve.ID = Convert.ToInt32((string)row.Cells[COL_PLOTID].Value);
+                    pve.id = Convert.ToInt32((string)row.Cells[COL_PLOTID].Value);
                     pve.type = StringToType((string)row.Cells[COL_VARTYPE].Value);
                     pve.game = StringToGame((string)row.Cells[COL_GAME].Value);
                     pve.category = row.Cells[COL_CATEGORY].Value != null ? row.Cells[COL_CATEGORY].Value.ToString() : "";
                     pve.state = row.Cells[COL_STATE].Value != null ? row.Cells[COL_STATE].Value.ToString() : "";
-                    pve.broken = (bool) row.Cells[COL_BROKEN].Value;
-                    pve.me2id = row.Cells[COL_ME2SPEC].Value != null ? Convert.ToInt32(row.Cells[COL_ME2SPEC].Value.ToString()) : 0;
-                    pve.me3id = row.Cells[COL_ME3SPEC].Value != null ? Convert.ToInt32(row.Cells[COL_ME3SPEC].Value.ToString()) : 0;
+                    pve.broken = row.Cells[COL_BROKEN].Value != null ? (bool) row.Cells[COL_BROKEN].Value : false;
+                    pve.me2id = row.Cells[COL_ME2SPEC].Value != null && !row.Cells[COL_ME2SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME2SPEC].Value.ToString()) : 0;
+                    pve.me3id = row.Cells[COL_ME3SPEC].Value != null && !row.Cells[COL_ME3SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME3SPEC].Value.ToString()) : 0;
                     pve.notes = row.Cells[COL_NOTES].Value != null ? row.Cells[COL_NOTES].Value.ToString() : "";
 
 
@@ -461,7 +461,7 @@ namespace ME3Explorer.PlotVarDB
                 for (int i = 0; i < count; i++)
                 {
                     p = new PlotVarEntry();
-                    p.ID = ReadInt(fs);
+                    p.id = ReadInt(fs);
                     p.type = ReadInt(fs);
                     p.game = ReadInt(fs);
                     p.category = ReadString(fs);
@@ -515,7 +515,7 @@ namespace ME3Explorer.PlotVarDB
                     for (int i = 0; i < count; i++)
                     {
                         p = new PlotVarEntry();
-                        p.ID = ReadInt(fs);
+                        p.id = ReadInt(fs);
                         p.type = ReadInt(fs);
                         p.state = ReadString(fs);
                         p.game = GAME_ME1;
@@ -524,7 +524,7 @@ namespace ME3Explorer.PlotVarDB
                     for (int i = 0; i < count; i++)
                     {
                         p = new PlotVarEntry();
-                        p.ID = ReadInt(fs);
+                        p.id = ReadInt(fs);
                         p.type = ReadInt(fs);
                         p.state = ReadString(fs);
                         p.game = GAME_ME2;
@@ -533,7 +533,7 @@ namespace ME3Explorer.PlotVarDB
                     for (int i = 0; i < count; i++)
                     {
                         p = new PlotVarEntry();
-                        p.ID = ReadInt(fs);
+                        p.id = ReadInt(fs);
                         p.type = ReadInt(fs);
                         p.state = ReadString(fs);
                         p.game = GAME_ME3;
