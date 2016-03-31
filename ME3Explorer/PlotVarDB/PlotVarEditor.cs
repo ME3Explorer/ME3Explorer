@@ -41,7 +41,7 @@ namespace ME3Explorer.PlotVarDB
                 parent.database.ME2.AddRange(res);
             if (version == 2)
                 parent.database.ME3.AddRange(res);
-            parent.RefreshLists();
+            parent.RefreshTable();
             this.Close();
         }
 
@@ -106,7 +106,7 @@ namespace ME3Explorer.PlotVarDB
                     parent.database.ME2[index] = res[0];
                 if (version == 2)
                     parent.database.ME3[index] = res[0];
-                parent.RefreshLists();
+                parent.RefreshTable();
             }
             this.Close();
         }
