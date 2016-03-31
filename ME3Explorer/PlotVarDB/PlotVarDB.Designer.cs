@@ -35,7 +35,6 @@ namespace ME3Explorer.PlotVarDB
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadDatabasePreR748ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFromCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,6 +50,7 @@ namespace ME3Explorer.PlotVarDB
             this.varTypeColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.gameColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.categoryColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.category2column = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.stateColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.brokenColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.me1me2Column = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -78,7 +78,6 @@ namespace ME3Explorer.PlotVarDB
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newDatabaseToolStripMenuItem,
             this.loadDatabaseToolStripMenuItem,
-            this.loadDatabasePreR748ToolStripMenuItem,
             this.saveDatabaseToolStripMenuItem,
             this.exportToCSVToolStripMenuItem,
             this.importFromCSVToolStripMenuItem});
@@ -99,13 +98,6 @@ namespace ME3Explorer.PlotVarDB
             this.loadDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.loadDatabaseToolStripMenuItem.Text = "Load Database";
             this.loadDatabaseToolStripMenuItem.Click += new System.EventHandler(this.loadDatabaseToolStripMenuItem_Click);
-            // 
-            // loadDatabasePreR748ToolStripMenuItem
-            // 
-            this.loadDatabasePreR748ToolStripMenuItem.Name = "loadDatabasePreR748ToolStripMenuItem";
-            this.loadDatabasePreR748ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.loadDatabasePreR748ToolStripMenuItem.Text = "Load Database (Pre r748)";
-            this.loadDatabasePreR748ToolStripMenuItem.Click += new System.EventHandler(this.loadDatabasePreR748ToolStripMenuItem_Click);
             // 
             // saveDatabaseToolStripMenuItem
             // 
@@ -195,6 +187,7 @@ namespace ME3Explorer.PlotVarDB
             this.varTypeColumn,
             this.gameColumn,
             this.categoryColumn,
+            this.category2column,
             this.stateColumn,
             this.brokenColumn,
             this.me1me2Column,
@@ -206,6 +199,7 @@ namespace ME3Explorer.PlotVarDB
             this.plotVarTable.Name = "plotVarTable";
             this.plotVarTable.Size = new System.Drawing.Size(1015, 213);
             this.plotVarTable.TabIndex = 4;
+            this.plotVarTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cellClicked);
             this.plotVarTable.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.plotVarTable_CellValidating);
             this.plotVarTable.KeyDown += new System.Windows.Forms.KeyEventHandler(this.plotVarTable_KeyDown);
             // 
@@ -232,7 +226,7 @@ namespace ME3Explorer.PlotVarDB
             // gameColumn
             // 
             this.gameColumn.Frozen = true;
-            this.gameColumn.HeaderText = "Game Column";
+            this.gameColumn.HeaderText = "Game";
             this.gameColumn.Items.AddRange(new object[] {
             "Mass Effect",
             "Mass Effect 2",
@@ -243,27 +237,37 @@ namespace ME3Explorer.PlotVarDB
             // categoryColumn
             // 
             this.categoryColumn.Frozen = true;
-            this.categoryColumn.HeaderText = "Category";
+            this.categoryColumn.HeaderText = "Category 1";
             this.categoryColumn.Name = "categoryColumn";
             this.categoryColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.categoryColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.categoryColumn.ToolTipText = "Category for the plot ID, such as [LEVIATHAN] or [ROMANCE]";
+            this.categoryColumn.ToolTipText = "Category for the plot ID, such as LEVIATHAN or ROMANCE";
+            // 
+            // category2column
+            // 
+            this.category2column.Frozen = true;
+            this.category2column.HeaderText = "Category 2";
+            this.category2column.Name = "category2column";
+            this.category2column.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.category2column.ToolTipText = "Category (additional) for the plot ID, such as LEVIATHAN or ROMANCE";
             // 
             // stateColumn
             // 
             this.stateColumn.Frozen = true;
-            this.stateColumn.HeaderText = "State";
+            this.stateColumn.HeaderText = "State/Values";
             this.stateColumn.Name = "stateColumn";
             this.stateColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.stateColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.stateColumn.ToolTipText = "Describes what this plot ID is used for";
             // 
             // brokenColumn
             // 
+            this.brokenColumn.FalseValue = "false";
             this.brokenColumn.Frozen = true;
             this.brokenColumn.HeaderText = "Broken?";
+            this.brokenColumn.IndeterminateValue = "false";
             this.brokenColumn.Name = "brokenColumn";
             this.brokenColumn.ToolTipText = "Indicator that this plot ID value is not properly set by the game";
+            this.brokenColumn.TrueValue = "true";
             this.brokenColumn.Width = 50;
             // 
             // me1me2Column
@@ -333,17 +337,17 @@ namespace ME3Explorer.PlotVarDB
         private System.Windows.Forms.DataGridView plotVarTable;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripButton deleteRowButton;
-        private ToolStripMenuItem loadDatabasePreR748ToolStripMenuItem;
+        private ToolStripMenuItem exportToCSVToolStripMenuItem;
+        private ToolStripMenuItem importFromCSVToolStripMenuItem;
         private DataGridViewTextBoxColumn plotIDColumn;
         private DataGridViewComboBoxColumn varTypeColumn;
         private DataGridViewComboBoxColumn gameColumn;
         private DataGridViewTextBoxColumn categoryColumn;
+        private DataGridViewTextBoxColumn category2column;
         private DataGridViewTextBoxColumn stateColumn;
         private DataGridViewCheckBoxColumn brokenColumn;
         private DataGridViewTextBoxColumn me1me2Column;
         private DataGridViewTextBoxColumn me2me3Column;
         private DataGridViewTextBoxColumn notesColumn;
-        private ToolStripMenuItem exportToCSVToolStripMenuItem;
-        private ToolStripMenuItem importFromCSVToolStripMenuItem;
     }
 }

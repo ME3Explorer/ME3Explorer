@@ -9,31 +9,43 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using CsvHelper;
+using System.Text.RegularExpressions;
 
 namespace ME3Explorer.PlotVarDB
 {
     public partial class PlotVarDB : Form
     {
-        public int SortStyle = 0; //0 = by id, 1 = by type, 2 = by desc
+        public const int V2PLUS_MAGIC = 0x504C4F54; //files that start with this are V2 and above. That is the only purpose of this value. Also easter egg ;)
+        public const int VERSION_2 = 2;
+        public const int CURRENT_VERSION = VERSION_2;
 
+        //Constants for the column indexes - allows easy adding and accessing of columns by name
         public const int COL_PLOTID = 0;
         public const int COL_VARTYPE = 1;
         public const int COL_GAME = 2;
-        public const int COL_CATEGORY = 3;
-        public const int COL_STATE = 4;
-        public const int COL_BROKEN = 5;
-        public const int COL_ME2SPEC = 6;
-        public const int COL_ME3SPEC = 7;
-        public const int COL_NOTES = 8;
+        public const int COL_CATEGORY1 = 3;
+        public const int COL_CATEGORY2 = 4;
+        public const int COL_STATE = 5;
+        public const int COL_BROKEN = 6;
+        public const int COL_ME2SPEC = 7;
+        public const int COL_ME3SPEC = 8;
+        public const int COL_NOTES = 9;
 
+        //.db vartype value mapping
         public const int VARTYPE_BOOL = 0;
-        public const int VARTYPE_FLOAT = 1;
-        public const int VARTYPE_INTEGER = 2;
+        public const int VARTYPE_FLOAT = 2;
+        public const int VARTYPE_INTEGER = 1;
 
-        public const int GAME_ME1 = 0;
-        public const int GAME_ME2 = 1;
-        public const int GAME_ME3 = 2;
+        //Game value mapping
+        public const int GAME_ME1 = 1;
+        public const int GAME_ME2 = 2;
+        public const int GAME_ME3 = 3;
+
+        //List of loaded plotvarentries. Commit the table to sync this with the displayed data.
         public List<PlotVarEntry> entries;
+
+        //Turns on/off cell validation. When refreshing the table it should be off because while the data is loading
+        //values may be invalid until fully loaded. Turn on once loaded.
         private bool validating = true;
 
         public class PlotVarEntry
@@ -41,7 +53,8 @@ namespace ME3Explorer.PlotVarDB
             public int id { get; set; }
             public int type { get; set; } // 0 = bool, 1 = int, 2 = float
             public int game { get; set; } //0 = me1, 2 = me2, 3 = me3. Use consts
-            public string category { get; set; }
+            public string category1 { get; set; }
+            public string category2 { get; set; }
             public string state { get; set; }
             public bool broken { get; set; }
             public int me2id { get; set; }
@@ -60,9 +73,7 @@ namespace ME3Explorer.PlotVarDB
             this.plotVarTable.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             entries = new List<PlotVarEntry>();
             status.Text = "Open DB from the file menu or start entering data to start a new one";
-
         }
-
 
         public string TypeToString(int type)
         {
@@ -87,7 +98,6 @@ namespace ME3Explorer.PlotVarDB
             validating = false;
             plotVarTable.ClearSelection();
             plotVarTable.Rows[0].Selected = true;
-            Debug.WriteLine("Removing row start: " + plotVarTable.CurrentRow.Index);
             while (plotVarTable.Rows[0] != null && !plotVarTable.Rows[0].IsNewRow)
             {
                 plotVarTable.Rows.Remove(plotVarTable.Rows[0]);
@@ -96,11 +106,11 @@ namespace ME3Explorer.PlotVarDB
 
             foreach (PlotVarEntry p in entries)
             {
-                object[] row = new object[] { p.id.ToString(), TypeToString(p.type), GameToString(p.game), p.category, p.state, p.broken, p.me2id > 0 ? p.me2id.ToString() : "", p.me3id > 0 ? p.me3id.ToString() : "", p.notes };
+                //defines row data. If you add columns, you need to add them here in order
+                object[] row = new object[] { p.id.ToString(), TypeToString(p.type), GameToString(p.game), p.category1, p.category2, p.state, p.broken, p.me2id > 0 ? p.me2id.ToString() : "", p.me3id > 0 ? p.me3id.ToString() : "", p.notes };
                 plotVarTable.Rows.Add(row);
             }
-            //    listBox1.Items.Add("ID: " + p.ID + " TYPE: " + TypeToString(p.type) + " DESCRIPTION: " + p.Desc);
-            status.Text = "Elements: " + (plotVarTable.Rows.Count - 1);
+            status.Text = "Number of entries: " + (plotVarTable.Rows.Count - 1);
         }
 
         private object GameToString(int game)
@@ -117,60 +127,6 @@ namespace ME3Explorer.PlotVarDB
                     return "";
             }
         }
-
-        //public void RefreshLists()
-        //{
-        //    listBox1.Items.Clear();
-        //    List<PlotVarEntry> temp = new List<PlotVarEntry>();
-        //    if (MEVersion == 0)
-        //        temp = database.ME1;
-        //    if (MEVersion == 1)
-        //        temp = database.ME2;
-        //    if (MEVersion == 2)
-        //        temp = database.ME3;
-        //    bool run = true;
-        //    while (run)
-        //    {
-        //        run = false;
-        //        for (int i = 0; i < temp.Count - 1; i++)
-        //        {
-        //            switch (SortStyle)
-        //            {
-        //                case 0:
-        //                    if (temp[i].ID > temp[i + 1].ID)
-        //                    {
-        //                        run = true;
-        //                        PlotVarEntry t = temp[i];
-        //                        temp[i] = temp[i + 1];
-        //                        temp[i + 1] = t;
-        //                    }
-        //                    break;
-
-        //                case 1:
-        //                    if (temp[i].type > temp[i + 1].type)
-        //                    {
-        //                        run = true;
-        //                        PlotVarEntry t = temp[i];
-        //                        temp[i] = temp[i + 1];
-        //                        temp[i + 1] = t;
-        //                    }
-        //                    break;
-        //                case 2:
-        //                    if (string.Compare(temp[i].Desc, temp[i + 1].Desc) < 0) 
-        //                    {
-        //                        run = true;
-        //                        PlotVarEntry t = temp[i];
-        //                        temp[i] = temp[i + 1];
-        //                        temp[i + 1] = t;
-        //                    }
-        //                    break;
-        //            }
-        //        }
-        //    }
-        //    foreach (PlotVarEntry p in temp)
-        //        listBox1.Items.Add("ID: " + p.ID + " TYPE: " + TypeToString(p.type) + " DESCRIPTION: " + p.Desc);
-        //    status.Text = "Elements: " + listBox1.Items.Count;
-        //}
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
@@ -195,7 +151,14 @@ namespace ME3Explorer.PlotVarDB
                     return;
                 };
 
-                if (j[COL_CATEGORY] != null && j[COL_CATEGORY].Value.ToString().ToLower().Contains(s))
+                if (j[COL_CATEGORY1] != null && j[COL_CATEGORY1].Value.ToString().ToLower().Contains(s))
+                {
+                    plotVarTable.ClearSelection();
+                    plotVarTable.Rows[i].Selected = true;
+                    return;
+                };
+
+                if (j[COL_CATEGORY2] != null && j[COL_CATEGORY2].Value.ToString().ToLower().Contains(s))
                 {
                     plotVarTable.ClearSelection();
                     plotVarTable.Rows[i].Selected = true;
@@ -222,6 +185,13 @@ namespace ME3Explorer.PlotVarDB
                     plotVarTable.Rows[i].Selected = true;
                     return;
                 };
+
+                if (j[COL_NOTES] != null && j[COL_NOTES].Value.ToString().ToLower().Contains(s))
+                {
+                    plotVarTable.ClearSelection();
+                    plotVarTable.Rows[i].Selected = true;
+                    return;
+                };
             }
 
         }
@@ -231,43 +201,6 @@ namespace ME3Explorer.PlotVarDB
             if (e.KeyChar == (char)Keys.Enter)
                 Search();
         }
-
-        //private void removeToolStripMenuItem_Click(object sender, EventArgs e)
-        //{
-        //    int n = listBox1.SelectedIndex;
-        //    if (n == -1)
-        //        return;
-        //    string s = listBox1.Items[n].ToString();
-        //    s = s.Substring(4, s.Length - 4);
-        //    string[] s2 = s.Split(' ');
-        //    int id;
-        //    if(!int.TryParse(s2[0], out id))
-        //        return;
-        //    if(MEVersion == 0)
-        //        for(int i=0;i<database.ME1.Count;i++)
-        //            if (database.ME1[i].ID == id)
-        //            {
-        //                database.ME1.RemoveAt(i);
-        //                RefreshTable();
-        //                return;
-        //            }
-        //    if (MEVersion == 1)
-        //        for (int i = 0; i < database.ME2.Count; i++)
-        //            if (database.ME2[i].ID == id)
-        //            {
-        //                database.ME2.RemoveAt(i);
-        //                RefreshTable();
-        //                return;
-        //            }
-        //    if (MEVersion == 2)
-        //        for (int i = 0; i < database.ME3.Count; i++)
-        //            if (database.ME3[i].ID == id)
-        //            {
-        //                database.ME3.RemoveAt(i);
-        //                RefreshTable();
-        //                return;
-        //            }
-        //}
 
         private void newDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -284,13 +217,19 @@ namespace ME3Explorer.PlotVarDB
             {
                 FileStream fs = new FileStream(d.FileName, FileMode.Create, FileAccess.Write);
                 BitConverter.IsLittleEndian = true;
+
+                //Header
+                fs.Write(BitConverter.GetBytes(V2PLUS_MAGIC), 0, 4);
+                fs.Write(BitConverter.GetBytes(CURRENT_VERSION), 0, 4);
+
+                //Start of data
                 fs.Write(BitConverter.GetBytes(entries.Count), 0, 4);
                 foreach (PlotVarEntry p in entries)
                 {
                     fs.Write(BitConverter.GetBytes(p.id), 0, 4);
                     fs.Write(BitConverter.GetBytes(p.type), 0, 4);
                     fs.Write(BitConverter.GetBytes(p.game), 0, 4);
-                    WriteString(fs, p.category ?? "");
+                    WriteString(fs, p.category1 ?? "");
                     WriteString(fs, p.state ?? "");
                     fs.WriteByte(BitConverter.GetBytes(p.broken)[0]); //gets 1 byte true/false
                     fs.Write(BitConverter.GetBytes(p.me2id), 0, 4);
@@ -304,6 +243,12 @@ namespace ME3Explorer.PlotVarDB
 
         private void commitTable()
         {
+            //Commit the current edit to the table
+            if (plotVarTable.IsCurrentCellDirty)
+            {
+                plotVarTable.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+
             List<PlotVarEntry> commitingEntries = new List<PlotVarEntry>();
             foreach (DataGridViewRow row in plotVarTable.Rows)
             {
@@ -313,15 +258,13 @@ namespace ME3Explorer.PlotVarDB
                     pve.id = Convert.ToInt32((string)row.Cells[COL_PLOTID].Value);
                     pve.type = StringToType((string)row.Cells[COL_VARTYPE].Value);
                     pve.game = StringToGame((string)row.Cells[COL_GAME].Value);
-                    pve.category = row.Cells[COL_CATEGORY].Value != null ? row.Cells[COL_CATEGORY].Value.ToString() : "";
+                    pve.category1 = row.Cells[COL_CATEGORY1].Value != null ? row.Cells[COL_CATEGORY1].Value.ToString() : "";
                     pve.state = row.Cells[COL_STATE].Value != null ? row.Cells[COL_STATE].Value.ToString() : "";
-                    pve.broken = row.Cells[COL_BROKEN].Value != null ? (bool)row.Cells[COL_BROKEN].Value : false;
+                    object broken = row.Cells[COL_BROKEN].Value;
+                    pve.broken = Convert.ToBoolean(broken);
                     pve.me2id = row.Cells[COL_ME2SPEC].Value != null && !row.Cells[COL_ME2SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME2SPEC].Value.ToString()) : 0;
                     pve.me3id = row.Cells[COL_ME3SPEC].Value != null && !row.Cells[COL_ME3SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME3SPEC].Value.ToString()) : 0;
                     pve.notes = row.Cells[COL_NOTES].Value != null ? row.Cells[COL_NOTES].Value.ToString() : "";
-
-
-
                     commitingEntries.Add(pve);
                 }
             }
@@ -395,6 +338,21 @@ namespace ME3Explorer.PlotVarDB
             }
         }
 
+        private string TypeToCSVType(int value)
+        {
+            switch (value)
+            {
+                case 0:
+                    return "B";
+                case 1:
+                    return "I";
+                case 2:
+                    return "F";
+                default:
+                    return "";
+            }
+        }
+
         public void WriteString(FileStream fs, string s)
         {
             fs.Write(BitConverter.GetBytes((int)s.Length), 0, 4);
@@ -455,29 +413,130 @@ namespace ME3Explorer.PlotVarDB
             {
                 FileStream fs = new FileStream(d.FileName, FileMode.Open, FileAccess.Read);
                 BitConverter.IsLittleEndian = true;
-                PlotVarEntry p;
-                entries = new List<PlotVarEntry>();
-                int count = ReadInt(fs);
-                for (int i = 0; i < count; i++)
+                int magic = ReadInt(fs);
+                if (magic != V2PLUS_MAGIC)
                 {
-                    p = new PlotVarEntry();
-                    p.id = ReadInt(fs);
-                    p.type = ReadInt(fs);
-                    p.game = ReadInt(fs);
-                    p.category = ReadString(fs);
-                    p.state = ReadString(fs);
-                    p.broken = ReadBool(fs);
-                    p.me2id = ReadInt(fs);
-                    p.me3id = ReadInt(fs);
-                    p.notes = ReadString(fs);
-                    entries.Add(p);
+                    //Pre v748
+                    fs.Seek(0, SeekOrigin.Begin);
+                    entries = readVersion1DB(fs);
+                }
+                else
+                {
+                    //748+
+                    int version = ReadInt(fs);
+                    switch (version)
+                    {
+                        case VERSION_2:
+                            entries = readVersion2DB(fs);
+                            break;
+                            //add a case here if you are adding/updating the format of the DB.
+                    }
                 }
                 fs.Close();
                 RefreshTable();
-                //MessageBox.Show("Done.");
             }
         }
 
+        /// <summary>
+        /// Reads a v2 type DB (r748), by FemShep. Returns list of read entries.
+        /// Contains the following columns:
+        /// Plot ID
+        /// Type (as int)
+        /// Game (as int)
+        /// Category1 (as string)
+        /// Category2 (as string)
+        /// State/Value (as string)
+        /// Broken (as bool (stored as byte))
+        /// ME2 ID (as int)
+        /// ME3 ID (as int)
+        /// Notes (as string)
+        /// </summary>
+        /// <param name="fs">Filestream advanced past the version indicator</param>
+        private List<PlotVarEntry> readVersion2DB(FileStream fs)
+        {
+            PlotVarEntry p;
+            entries = new List<PlotVarEntry>();
+
+            int count = ReadInt(fs);
+            for (int i = 0; i < count; i++)
+            {
+                p = new PlotVarEntry();
+                p.id = ReadInt(fs);
+                p.type = ReadInt(fs);
+                p.game = ReadInt(fs);
+                p.category1 = ReadString(fs);
+                p.state = ReadString(fs);
+                p.broken = ReadBool(fs);
+                p.me2id = ReadInt(fs);
+                p.me3id = ReadInt(fs);
+                p.notes = ReadString(fs);
+                entries.Add(p);
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Reads the old style DB files from Pre-r748.
+        /// Contains the following columns:
+        /// ID (as int)
+        /// Type (as int)
+        /// Desc (as string)
+        /// This file format has a different layout than v2 and up.
+        /// </summary>
+        /// <param name="fs">Filestream at the start of a v1 file</param>
+        /// <returns>List of imported entries. Desc is mapped to the state column.</returns>
+        private List<PlotVarEntry> readVersion1DB(FileStream fs)
+        {
+            PlotVarEntry p;
+            entries = new List<PlotVarEntry>();
+            int count = ReadInt(fs);
+            for (int i = 0; i < count; i++)
+            {
+                p = new PlotVarEntry();
+                p.id = ReadInt(fs);
+                p.type = ReadInt(fs);
+                string desc = ReadString(fs);
+                p.category1 = Regex.Match(desc, @"\[(.*?)\]").Groups[1].Value;
+                p.state = desc.Substring(p.category1.Length > 0 ? p.category1.Length + 2 : 0).Trim();
+                p.game = GAME_ME1;
+                p.broken = false;
+                entries.Add(p);
+            }
+            count = ReadInt(fs);
+            for (int i = 0; i < count; i++)
+            {
+                p = new PlotVarEntry();
+                p.id = ReadInt(fs);
+                p.type = ReadInt(fs);
+                string desc = ReadString(fs);
+                p.category1 = Regex.Match(desc, @"\[(.*?)\]").Groups[1].Value;
+                p.state = desc.Substring(p.category1.Length > 0 ? p.category1.Length + 2 : 0).Trim();
+                p.game = GAME_ME2;
+                p.broken = false;
+                entries.Add(p);
+            }
+            count = ReadInt(fs);
+            for (int i = 0; i < count; i++)
+            {
+                p = new PlotVarEntry();
+                p.id = ReadInt(fs);
+                p.type = ReadInt(fs);
+                string desc = ReadString(fs);
+                p.category1 = Regex.Match(desc, @"\[(.*?)\]").Groups[1].Value;
+                p.state = desc.Substring(p.category1.Length > 0 ? p.category1.Length + 2 : 0).Trim();
+                p.game = GAME_ME3;
+                p.broken = false;
+                entries.Add(p);
+            }
+            return entries;
+        }
+
+        /// <summary>
+        /// Handles the delete key press on a row
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void plotVarTable_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
@@ -486,6 +545,9 @@ namespace ME3Explorer.PlotVarDB
             }
         }
 
+        /// <summary>
+        /// Deletes the currently selected row
+        /// </summary>
         private void deleteCurrentRow()
         {
             if (plotVarTable.CurrentRow != null && !plotVarTable.CurrentRow.IsNewRow)
@@ -499,52 +561,6 @@ namespace ME3Explorer.PlotVarDB
             deleteCurrentRow();
         }
 
-        private void loadDatabasePreR748ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-            {
-                OpenFileDialog d = new OpenFileDialog();
-                d.Filter = "*.db|*.db";
-                if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    FileStream fs = new FileStream(d.FileName, FileMode.Open, FileAccess.Read);
-                    BitConverter.IsLittleEndian = true;
-                    PlotVarEntry p;
-                    entries = new List<PlotVarEntry>();
-                    int count = ReadInt(fs);
-                    for (int i = 0; i < count; i++)
-                    {
-                        p = new PlotVarEntry();
-                        p.id = ReadInt(fs);
-                        p.type = ReadInt(fs);
-                        p.state = ReadString(fs);
-                        p.game = GAME_ME1;
-                    }
-                    count = ReadInt(fs);
-                    for (int i = 0; i < count; i++)
-                    {
-                        p = new PlotVarEntry();
-                        p.id = ReadInt(fs);
-                        p.type = ReadInt(fs);
-                        p.state = ReadString(fs);
-                        p.game = GAME_ME2;
-                    }
-                    count = ReadInt(fs);
-                    for (int i = 0; i < count; i++)
-                    {
-                        p = new PlotVarEntry();
-                        p.id = ReadInt(fs);
-                        p.type = ReadInt(fs);
-                        p.state = ReadString(fs);
-                        p.game = GAME_ME3;
-                    }
-                    fs.Close();
-                    RefreshTable();
-                    //MessageBox.Show("Done.");
-                }
-            }
-        }
-
         private void exportToCSVToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog d = new SaveFileDialog();
@@ -553,7 +569,35 @@ namespace ME3Explorer.PlotVarDB
             {
                 System.IO.StreamWriter stringWriter = new System.IO.StreamWriter(d.FileName);
                 var csv = new CsvWriter(stringWriter);
-                csv.WriteRecords(entries);
+                //Header record
+                csv.WriteField("id");
+                csv.WriteField("type");
+                csv.WriteField("game");
+                csv.WriteField("category1");
+                csv.WriteField("category2");
+                csv.WriteField("state");
+                csv.WriteField("broken");
+                csv.WriteField("me2id");
+                csv.WriteField("me3id");
+                csv.WriteField("notes");
+                csv.NextRecord();
+
+                //Write records
+                foreach (var item in entries)
+                {
+                    csv.WriteField(item.id);
+                    csv.WriteField(TypeToCSVType(item.type));
+                    csv.WriteField(item.game);
+                    csv.WriteField(item.category1);
+                    csv.WriteField(item.category2);
+                    csv.WriteField(item.state);
+                    csv.WriteField(item.broken);
+                    csv.WriteField(item.me2id);
+                    csv.WriteField(item.me3id);
+                    csv.WriteField(item.notes);
+                    csv.NextRecord();
+                }
+
                 stringWriter.Close();
                 status.Text = "Exported DB to CSV: " + d.FileName;
             }
@@ -573,8 +617,20 @@ namespace ME3Explorer.PlotVarDB
 
                 while (csv.Read())
                 {
-                    importingEntries.Add(csv.GetRecord<PlotVarEntry>());
+                    PlotVarEntry p = new PlotVarEntry();
+                    p.id = csv.GetField<int>(COL_PLOTID);
+                    p.type = CSVStringToType(csv.GetField<string>(COL_VARTYPE));
+                    p.game = csv.GetField<int>(COL_GAME);
+                    p.category1 = csv.GetField<string>(COL_CATEGORY1);
+                    p.category2 = csv.GetField<string>(COL_CATEGORY2);
+                    p.state = csv.GetField<string>(COL_STATE);
+                    p.broken = csv.GetField<bool>(COL_BROKEN);
+                    p.me2id = csv.GetField<int>(COL_ME2SPEC);
+                    p.me3id = csv.GetField<int>(COL_ME3SPEC);
+                    p.notes = csv.GetField<string>(COL_NOTES);
+                    importingEntries.Add(p);
                 }
+
 
                 //csv.GetRecords<PlotVarEntry>().ToList();
                 stringreader.Close();
@@ -620,9 +676,9 @@ namespace ME3Explorer.PlotVarDB
                             }
 
                             //category
-                            if (ent.category == null || ent.category.Equals(""))
+                            if (ent.category1 == null || ent.category1.Equals(""))
                             {
-                                ent.category = pve.category;
+                                ent.category1 = pve.category1;
                                 recordUpdated = true;
                             }
 
@@ -654,6 +710,33 @@ namespace ME3Explorer.PlotVarDB
                 }
                 RefreshTable();
                 status.Text = "Imported from CSV into DB: " + d.FileName + " | " + recordsImported + " records imported | " + recordsUpdated + " records upated";
+            }
+        }
+        private int CSVStringToType(string v)
+        {
+            switch (v)
+            {
+                case "B":
+                    return VARTYPE_BOOL;
+                case "I":
+                    return VARTYPE_INTEGER;
+                case "F":
+                    return VARTYPE_FLOAT;
+                default:
+                    return 3;
+            }
+        }
+
+        private void cellClicked(object sender, DataGridViewCellEventArgs e)
+        {
+            bool validClick = (e.RowIndex != -1 && e.ColumnIndex != -1); //Make sure the clicked row/column is valid.
+            var datagridview = sender as DataGridView;
+
+            // Check to make sure the cell clicked is the cell containing the combobox 
+            if (datagridview.Columns[e.ColumnIndex] is DataGridViewComboBoxColumn && validClick)
+            {
+                datagridview.BeginEdit(true);
+                ((ComboBox)datagridview.EditingControl).DroppedDown = true;
             }
         }
     }
