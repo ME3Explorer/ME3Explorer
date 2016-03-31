@@ -35,7 +35,10 @@ namespace ME3Explorer.PlotVarDB
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadDatabasePreR748ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportToCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importFromCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -44,7 +47,6 @@ namespace ME3Explorer.PlotVarDB
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.status = new System.Windows.Forms.ToolStripStatusLabel();
             this.plotVarTable = new System.Windows.Forms.DataGridView();
-            this.loadDatabasePreR748ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.plotIDColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.varTypeColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.gameColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
@@ -54,8 +56,6 @@ namespace ME3Explorer.PlotVarDB
             this.me1me2Column = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.me2me3Column = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.notesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.exportToCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importFromCSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -89,23 +89,44 @@ namespace ME3Explorer.PlotVarDB
             // newDatabaseToolStripMenuItem
             // 
             this.newDatabaseToolStripMenuItem.Name = "newDatabaseToolStripMenuItem";
-            this.newDatabaseToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.newDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.newDatabaseToolStripMenuItem.Text = "New Database";
             this.newDatabaseToolStripMenuItem.Click += new System.EventHandler(this.newDatabaseToolStripMenuItem_Click);
             // 
             // loadDatabaseToolStripMenuItem
             // 
             this.loadDatabaseToolStripMenuItem.Name = "loadDatabaseToolStripMenuItem";
-            this.loadDatabaseToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.loadDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.loadDatabaseToolStripMenuItem.Text = "Load Database";
             this.loadDatabaseToolStripMenuItem.Click += new System.EventHandler(this.loadDatabaseToolStripMenuItem_Click);
+            // 
+            // loadDatabasePreR748ToolStripMenuItem
+            // 
+            this.loadDatabasePreR748ToolStripMenuItem.Name = "loadDatabasePreR748ToolStripMenuItem";
+            this.loadDatabasePreR748ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.loadDatabasePreR748ToolStripMenuItem.Text = "Load Database (Pre r748)";
+            this.loadDatabasePreR748ToolStripMenuItem.Click += new System.EventHandler(this.loadDatabasePreR748ToolStripMenuItem_Click);
             // 
             // saveDatabaseToolStripMenuItem
             // 
             this.saveDatabaseToolStripMenuItem.Name = "saveDatabaseToolStripMenuItem";
-            this.saveDatabaseToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.saveDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.saveDatabaseToolStripMenuItem.Text = "Save Database";
             this.saveDatabaseToolStripMenuItem.Click += new System.EventHandler(this.saveDatabaseToolStripMenuItem_Click);
+            // 
+            // exportToCSVToolStripMenuItem
+            // 
+            this.exportToCSVToolStripMenuItem.Name = "exportToCSVToolStripMenuItem";
+            this.exportToCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.exportToCSVToolStripMenuItem.Text = "Export to CSV";
+            this.exportToCSVToolStripMenuItem.Click += new System.EventHandler(this.exportToCSVToolStripMenuItem_Click);
+            // 
+            // importFromCSVToolStripMenuItem
+            // 
+            this.importFromCSVToolStripMenuItem.Name = "importFromCSVToolStripMenuItem";
+            this.importFromCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.importFromCSVToolStripMenuItem.Text = "Import from CSV ";
+            this.importFromCSVToolStripMenuItem.Click += new System.EventHandler(this.importFromCSVToolStripMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -187,13 +208,6 @@ namespace ME3Explorer.PlotVarDB
             this.plotVarTable.TabIndex = 4;
             this.plotVarTable.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.plotVarTable_CellValidating);
             this.plotVarTable.KeyDown += new System.Windows.Forms.KeyEventHandler(this.plotVarTable_KeyDown);
-            // 
-            // loadDatabasePreR748ToolStripMenuItem
-            // 
-            this.loadDatabasePreR748ToolStripMenuItem.Name = "loadDatabasePreR748ToolStripMenuItem";
-            this.loadDatabasePreR748ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.loadDatabasePreR748ToolStripMenuItem.Text = "Load Database (Pre r748)";
-            this.loadDatabasePreR748ToolStripMenuItem.Click += new System.EventHandler(this.loadDatabasePreR748ToolStripMenuItem_Click);
             // 
             // plotIDColumn
             // 
@@ -277,19 +291,6 @@ namespace ME3Explorer.PlotVarDB
             this.notesColumn.Name = "notesColumn";
             this.notesColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.notesColumn.ToolTipText = "Additional notes for this plot ID.";
-            // 
-            // exportToCSVToolStripMenuItem
-            // 
-            this.exportToCSVToolStripMenuItem.Name = "exportToCSVToolStripMenuItem";
-            this.exportToCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.exportToCSVToolStripMenuItem.Text = "Export to CSV";
-            this.exportToCSVToolStripMenuItem.Click += new System.EventHandler(this.exportToCSVToolStripMenuItem_Click);
-            // 
-            // importFromCSVToolStripMenuItem
-            // 
-            this.importFromCSVToolStripMenuItem.Name = "importFromCSVToolStripMenuItem";
-            this.importFromCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.importFromCSVToolStripMenuItem.Text = "Import from CSV ";
             // 
             // PlotVarDB
             // 

@@ -315,7 +315,7 @@ namespace ME3Explorer.PlotVarDB
                     pve.game = StringToGame((string)row.Cells[COL_GAME].Value);
                     pve.category = row.Cells[COL_CATEGORY].Value != null ? row.Cells[COL_CATEGORY].Value.ToString() : "";
                     pve.state = row.Cells[COL_STATE].Value != null ? row.Cells[COL_STATE].Value.ToString() : "";
-                    pve.broken = row.Cells[COL_BROKEN].Value != null ? (bool) row.Cells[COL_BROKEN].Value : false;
+                    pve.broken = row.Cells[COL_BROKEN].Value != null ? (bool)row.Cells[COL_BROKEN].Value : false;
                     pve.me2id = row.Cells[COL_ME2SPEC].Value != null && !row.Cells[COL_ME2SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME2SPEC].Value.ToString()) : 0;
                     pve.me3id = row.Cells[COL_ME3SPEC].Value != null && !row.Cells[COL_ME3SPEC].Value.Equals("") ? Convert.ToInt32(row.Cells[COL_ME3SPEC].Value.ToString()) : 0;
                     pve.notes = row.Cells[COL_NOTES].Value != null ? row.Cells[COL_NOTES].Value.ToString() : "";
@@ -556,6 +556,104 @@ namespace ME3Explorer.PlotVarDB
                 csv.WriteRecords(entries);
                 stringWriter.Close();
                 status.Text = "Exported DB to CSV: " + d.FileName;
+            }
+        }
+
+        private void importFromCSVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog d = new OpenFileDialog();
+            d.Filter = "*.csv|*.csv";
+            if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                commitTable();
+                System.IO.StreamReader stringreader = new System.IO.StreamReader(d.FileName);
+                var csv = new CsvReader(stringreader);
+                var item = csv.GetRecords<PlotVarEntry>();
+                List<PlotVarEntry> importingEntries = new List<PlotVarEntry>();
+
+                while (csv.Read())
+                {
+                    var record = csv.GetRecord<PlotVarEntry>();
+                }
+
+                //csv.GetRecords<PlotVarEntry>().ToList();
+                stringreader.Close();
+
+                //import
+                int recordsImported = 0, recordsUpdated = 0;
+                foreach (PlotVarEntry pve in importingEntries)
+                {
+                    bool import = true;
+                    foreach (PlotVarEntry ent in entries)
+                    {
+                        if (ent.id == pve.id && ent.game == pve.game)
+                        {
+                            import = false;
+                            bool recordUpdated = false;
+                            //same entry, merge empty values
+                            //vartype
+                            if (ent.type != pve.type)
+                            {
+                                ent.type = pve.type;
+                                recordUpdated = true;
+                            }
+
+                            //broken
+                            if (ent.broken != pve.broken)
+                            {
+                                ent.broken = pve.broken;
+                                recordUpdated = true;
+                            }
+
+                            //me2
+                            if (ent.me2id != pve.me2id)
+                            {
+                                ent.me2id = pve.me2id;
+                                recordUpdated = true;
+                            }
+
+                            //me3id
+                            if (ent.me3id != pve.me3id)
+                            {
+                                ent.me3id = pve.me3id;
+                                recordUpdated = true;
+                            }
+
+                            //category
+                            if (ent.category == null || ent.category.Equals(""))
+                            {
+                                ent.category = pve.category;
+                                recordUpdated = true;
+                            }
+
+                            //state
+                            if (ent.state == null || ent.state.Equals(""))
+                            {
+                                ent.state = pve.state;
+                                recordUpdated = true;
+                            }
+
+                            //notes
+                            if (ent.notes == null || ent.notes.Equals(""))
+                            {
+                                ent.notes = pve.notes;
+                                recordUpdated = true;
+                            }
+
+                            if (recordUpdated)
+                            {
+                                recordsUpdated++;
+                            }
+                        }
+                    }
+                    if (import)
+                    {
+                        recordsImported++;
+                        entries.Add(pve);
+                    }
+                }
+                RefreshTable();
+                status.Text = "Imported from CSV into DB: " + d.FileName + " | " + recordsImported + " records imported | " + recordsUpdated + " records upated";
             }
         }
     }
