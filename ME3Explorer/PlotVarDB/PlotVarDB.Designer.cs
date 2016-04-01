@@ -88,35 +88,35 @@ namespace ME3Explorer.PlotVarDB
             // newDatabaseToolStripMenuItem
             // 
             this.newDatabaseToolStripMenuItem.Name = "newDatabaseToolStripMenuItem";
-            this.newDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.newDatabaseToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.newDatabaseToolStripMenuItem.Text = "New Database";
             this.newDatabaseToolStripMenuItem.Click += new System.EventHandler(this.newDatabaseToolStripMenuItem_Click);
             // 
             // loadDatabaseToolStripMenuItem
             // 
             this.loadDatabaseToolStripMenuItem.Name = "loadDatabaseToolStripMenuItem";
-            this.loadDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.loadDatabaseToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.loadDatabaseToolStripMenuItem.Text = "Load Database";
             this.loadDatabaseToolStripMenuItem.Click += new System.EventHandler(this.loadDatabaseToolStripMenuItem_Click);
             // 
             // saveDatabaseToolStripMenuItem
             // 
             this.saveDatabaseToolStripMenuItem.Name = "saveDatabaseToolStripMenuItem";
-            this.saveDatabaseToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.saveDatabaseToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.saveDatabaseToolStripMenuItem.Text = "Save Database";
             this.saveDatabaseToolStripMenuItem.Click += new System.EventHandler(this.saveDatabaseToolStripMenuItem_Click);
             // 
             // exportToCSVToolStripMenuItem
             // 
             this.exportToCSVToolStripMenuItem.Name = "exportToCSVToolStripMenuItem";
-            this.exportToCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.exportToCSVToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.exportToCSVToolStripMenuItem.Text = "Export to CSV";
             this.exportToCSVToolStripMenuItem.Click += new System.EventHandler(this.exportToCSVToolStripMenuItem_Click);
             // 
             // importFromCSVToolStripMenuItem
             // 
             this.importFromCSVToolStripMenuItem.Name = "importFromCSVToolStripMenuItem";
-            this.importFromCSVToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.importFromCSVToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.importFromCSVToolStripMenuItem.Text = "Import from CSV ";
             this.importFromCSVToolStripMenuItem.Click += new System.EventHandler(this.importFromCSVToolStripMenuItem_Click);
             // 
@@ -127,7 +127,7 @@ namespace ME3Explorer.PlotVarDB
             this.toolStripButton1,
             this.toolStripSeparator2,
             this.deleteRowButton});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 24);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1015, 25);
             this.toolStrip1.TabIndex = 1;
@@ -194,10 +194,10 @@ namespace ME3Explorer.PlotVarDB
             this.me2me3Column,
             this.notesColumn});
             this.plotVarTable.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.plotVarTable.Location = new System.Drawing.Point(0, 49);
+            this.plotVarTable.Location = new System.Drawing.Point(0, 25);
             this.plotVarTable.MultiSelect = false;
             this.plotVarTable.Name = "plotVarTable";
-            this.plotVarTable.Size = new System.Drawing.Size(1015, 213);
+            this.plotVarTable.Size = new System.Drawing.Size(1015, 237);
             this.plotVarTable.TabIndex = 4;
             this.plotVarTable.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.cellClicked);
             this.plotVarTable.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.plotVarTable_CellValidating);
@@ -232,6 +232,7 @@ namespace ME3Explorer.PlotVarDB
             "Mass Effect 2",
             "Mass Effect 3"});
             this.gameColumn.Name = "gameColumn";
+            this.gameColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.gameColumn.ToolTipText = "Which game this plot ID belongs to";
             // 
             // categoryColumn
@@ -240,7 +241,6 @@ namespace ME3Explorer.PlotVarDB
             this.categoryColumn.HeaderText = "Category 1";
             this.categoryColumn.Name = "categoryColumn";
             this.categoryColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.categoryColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.categoryColumn.ToolTipText = "Category for the plot ID, such as LEVIATHAN or ROMANCE";
             // 
             // category2column
@@ -266,6 +266,7 @@ namespace ME3Explorer.PlotVarDB
             this.brokenColumn.HeaderText = "Broken?";
             this.brokenColumn.IndeterminateValue = "false";
             this.brokenColumn.Name = "brokenColumn";
+            this.brokenColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.brokenColumn.ToolTipText = "Indicator that this plot ID value is not properly set by the game";
             this.brokenColumn.TrueValue = "true";
             this.brokenColumn.Width = 50;
@@ -276,7 +277,6 @@ namespace ME3Explorer.PlotVarDB
             this.me1me2Column.HeaderText = "ME1->ME2 ID";
             this.me1me2Column.Name = "me1me2Column";
             this.me1me2Column.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.me1me2Column.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.me1me2Column.ToolTipText = "The ID for the ME2 ID if this value carries from ME1 into ME2";
             // 
             // me2me3Column
@@ -285,7 +285,6 @@ namespace ME3Explorer.PlotVarDB
             this.me2me3Column.HeaderText = "ME2->ME3 ID";
             this.me2me3Column.Name = "me2me3Column";
             this.me2me3Column.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.me2me3Column.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.me2me3Column.ToolTipText = "The ID for the ME2 ID if this value carries from ME2 into ME3";
             // 
             // notesColumn
