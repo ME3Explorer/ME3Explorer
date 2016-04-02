@@ -72,7 +72,15 @@ namespace ME3Explorer.PlotVarDB
         {
             this.plotVarTable.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             entries = new List<PlotVarEntry>();
-            status.Text = "Open DB from the file menu or start entering data to start a new one";
+            string appPath = Application.StartupPath;
+            if (File.Exists(appPath + @"\plot.db"))
+            {
+                loadDatabase(appPath + @"\plot.db");
+            }
+            else
+            {
+                status.Text = "Open DB from the file menu or start entering data to start a new one";
+            }
         }
 
         public string TypeToString(int type)
@@ -140,60 +148,39 @@ namespace ME3Explorer.PlotVarDB
                 return;
             s = s.ToLower();
             int n = plotVarTable.CurrentRow.Index;
-            for (int i = n + 1; i < plotVarTable.Rows.Count; i++)
+            if (n >= plotVarTable.NewRowIndex)
             {
-                DataGridViewCellCollection j = plotVarTable.Rows[i].Cells;
-
-                if (j[COL_PLOTID] != null && j[COL_PLOTID].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_CATEGORY1] != null && j[COL_CATEGORY1].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_CATEGORY2] != null && j[COL_CATEGORY2].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_STATE] != null && j[COL_STATE].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_ME2SPEC] != null && j[COL_ME2SPEC].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_ME3SPEC] != null && j[COL_ME3SPEC].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
-
-                if (j[COL_NOTES] != null && j[COL_NOTES].Value.ToString().ToLower().Contains(s))
-                {
-                    plotVarTable.ClearSelection();
-                    plotVarTable.Rows[i].Selected = true;
-                    return;
-                };
+                //wrap search
+                n = 0;
             }
 
+            List<int> searchColumns = new List<int>();
+            //add search columns to this.
+            searchColumns.Add(COL_PLOTID);
+            searchColumns.Add(COL_CATEGORY1);
+            searchColumns.Add(COL_CATEGORY2);
+            searchColumns.Add(COL_STATE);
+            searchColumns.Add(COL_ME2SPEC);
+            searchColumns.Add(COL_ME2SPEC);
+            searchColumns.Add(COL_NOTES);
+
+            for (int i = n + 1; i < plotVarTable.Rows.Count; i++)
+            {
+                DataGridViewCellCollection row = plotVarTable.Rows[i].Cells;
+                foreach (int col in searchColumns)
+                {
+                    object cellValue = row[col].Value;
+                    if (cellValue != null && row[col].Value.ToString().ToLower().Contains(s))
+                    {
+                        plotVarTable.ClearSelection();
+                        //plotVarTable.Rows[i].Selected = true;
+                        plotVarTable.CurrentCell = plotVarTable[col, i];
+                        status.Text = "";
+                        return;
+                    }
+                }
+            }
+            status.Text = "No matches from current row to end of database.";
         }
 
         private void toolStripTextBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -411,30 +398,35 @@ namespace ME3Explorer.PlotVarDB
             d.Filter = "*.db|*.db";
             if (d.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                FileStream fs = new FileStream(d.FileName, FileMode.Open, FileAccess.Read);
-                BitConverter.IsLittleEndian = true;
-                int magic = ReadInt(fs);
-                if (magic != V2PLUS_MAGIC)
-                {
-                    //Pre v748
-                    fs.Seek(0, SeekOrigin.Begin);
-                    entries = readVersion1DB(fs);
-                }
-                else
-                {
-                    //748+
-                    int version = ReadInt(fs);
-                    switch (version)
-                    {
-                        case VERSION_2:
-                            entries = readVersion2DB(fs);
-                            break;
-                            //add a case here if you are adding/updating the format of the DB.
-                    }
-                }
-                fs.Close();
-                RefreshTable();
+                loadDatabase(d.FileName);
             }
+        }
+
+        private void loadDatabase(string fileName)
+        {
+            FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+            BitConverter.IsLittleEndian = true;
+            int magic = ReadInt(fs);
+            if (magic != V2PLUS_MAGIC)
+            {
+                //Pre v748
+                fs.Seek(0, SeekOrigin.Begin);
+                entries = readVersion1DB(fs);
+            }
+            else
+            {
+                //748+
+                int version = ReadInt(fs);
+                switch (version)
+                {
+                    case VERSION_2:
+                        entries = readVersion2DB(fs);
+                        break;
+                        //add a case here if you are adding/updating the format of the DB.
+                }
+            }
+            fs.Close();
+            RefreshTable();
         }
 
         /// <summary>
@@ -539,9 +531,41 @@ namespace ME3Explorer.PlotVarDB
         /// <param name="e"></param>
         private void plotVarTable_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete)
+            if (e.KeyCode == Keys.Delete && e.Modifiers == Keys.Shift)
             {
                 deleteCurrentRow();
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                deleteCurrentCell();
+            } else if (e.Control && e.KeyCode == Keys.C)
+            {
+                DataObject d = plotVarTable.GetClipboardContent();
+                Clipboard.SetDataObject(d);
+                e.Handled = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.V)
+            {
+                string s = Clipboard.GetText();
+                string[] lines = s.Split('\n');
+                int row = plotVarTable.CurrentCell.RowIndex;
+                int col = plotVarTable.CurrentCell.ColumnIndex;
+                string[] cells = lines[0].Split('\t');
+                int cellsSelected = cells.Length;
+                for (int i = 0; i < cellsSelected; i++)
+                {
+                    plotVarTable[col, row].Value = cells[i];
+                    col++;
+                }
+            }
+        }
+
+        private void deleteCurrentCell()
+        {
+            int colIndex = plotVarTable.CurrentCell.ColumnIndex;
+            if (colIndex != COL_VARTYPE && colIndex != COL_GAME && colIndex != COL_BROKEN)
+            {
+                plotVarTable.CurrentCell.Value = "";
             }
         }
 
@@ -600,6 +624,28 @@ namespace ME3Explorer.PlotVarDB
 
                 stringWriter.Close();
                 status.Text = "Exported DB to CSV: " + d.FileName;
+            }
+        }
+
+        private void customSortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column.Index == COL_PLOTID || e.Column.Index == COL_ME2SPEC || e.Column.Index == COL_ME3SPEC)
+            {
+                int a = 0;
+                int b = 0;
+                bool aresult = Int32.TryParse(e.CellValue1.ToString(), out a);
+                bool bresult = Int32.TryParse(e.CellValue2.ToString(), out b);
+                if (!aresult && !bresult)
+                {
+                    //two empty values being compared
+                    e.SortResult = 0;
+                    e.Handled = true;
+                    return;
+                }
+
+                e.SortResult = a.CompareTo(b);
+
+                e.Handled = true;
             }
         }
 
