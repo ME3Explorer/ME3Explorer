@@ -34,6 +34,7 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openPCCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton8 = new System.Windows.Forms.ToolStripButton();
@@ -92,7 +93,7 @@
             this.status2 = new System.Windows.Forms.StatusStrip();
             this.status4 = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabExProp = new System.Windows.Forms.TabPage();
-            this.treeView5 = new System.Windows.Forms.TreeView();
+            this.interpreter1 = new ME3Creator.Interpreter();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.labstate = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
@@ -158,7 +159,7 @@
             this.toolStripButton11 = new System.Windows.Forms.ToolStripButton();
             this.DebugOut = new System.Windows.Forms.RichTextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editNameButton = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -259,16 +260,23 @@
             // openPCCToolStripMenuItem
             // 
             this.openPCCToolStripMenuItem.Name = "openPCCToolStripMenuItem";
-            this.openPCCToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openPCCToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.openPCCToolStripMenuItem.Text = "Open PCC";
             this.openPCCToolStripMenuItem.Click += new System.EventHandler(this.openPCCToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
+            // 
+            // saveAsToolStripMenuItem
+            // 
+            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.saveAsToolStripMenuItem.Text = "Save As";
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -666,7 +674,8 @@
             // 
             this.toolStrip5.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newname,
-            this.toolStripButton12});
+            this.toolStripButton12,
+            this.editNameButton});
             this.toolStrip5.Location = new System.Drawing.Point(3, 3);
             this.toolStrip5.Name = "toolStrip5";
             this.toolStrip5.Size = new System.Drawing.Size(945, 25);
@@ -891,6 +900,7 @@
             this.hb2.TabIndex = 2;
             this.hb2.UseFixedBytesPerLine = true;
             this.hb2.VScrollBarVisible = true;
+            this.hb2.SelectionStartChanged += new System.EventHandler(this.hb2_SelectionLengthChanged);
             this.hb2.SelectionLengthChanged += new System.EventHandler(this.hb2_SelectionLengthChanged);
             // 
             // status2
@@ -911,7 +921,7 @@
             // 
             // tabExProp
             // 
-            this.tabExProp.Controls.Add(this.treeView5);
+            this.tabExProp.Controls.Add(this.interpreter1);
             this.tabExProp.Location = new System.Drawing.Point(4, 22);
             this.tabExProp.Name = "tabExProp";
             this.tabExProp.Padding = new System.Windows.Forms.Padding(3);
@@ -920,14 +930,14 @@
             this.tabExProp.Text = "Properties";
             this.tabExProp.UseVisualStyleBackColor = true;
             // 
-            // treeView5
+            // interpreter1
             // 
-            this.treeView5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView5.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.treeView5.Location = new System.Drawing.Point(3, 3);
-            this.treeView5.Name = "treeView5";
-            this.treeView5.Size = new System.Drawing.Size(483, 230);
-            this.treeView5.TabIndex = 2;
+            this.interpreter1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.interpreter1.Location = new System.Drawing.Point(3, 3);
+            this.interpreter1.Name = "interpreter1";
+            this.interpreter1.Pcc = null;
+            this.interpreter1.Size = new System.Drawing.Size(483, 230);
+            this.interpreter1.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -1622,12 +1632,15 @@
             // 
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // saveAsToolStripMenuItem
+            // editNameButton
             // 
-            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.saveAsToolStripMenuItem.Text = "Save As";
-            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            this.editNameButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.editNameButton.Image = ((System.Drawing.Image)(resources.GetObject("editNameButton.Image")));
+            this.editNameButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.editNameButton.Name = "editNameButton";
+            this.editNameButton.Size = new System.Drawing.Size(66, 22);
+            this.editNameButton.Text = "Edit Name";
+            this.editNameButton.Click += new System.EventHandler(this.editNameButton_Click);
             // 
             // Form1
             // 
@@ -1783,11 +1796,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem cloneToolStripMenuItem;
-        private System.Windows.Forms.TabControl tabControl3;
-        private System.Windows.Forms.TabPage tabExRaw;
-        private Be.Windows.Forms.HexBox hb2;
-        private System.Windows.Forms.TabPage tabExProp;
-        private System.Windows.Forms.TreeView treeView5;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStrip toolStrip2;
         private System.Windows.Forms.ToolStripStatusLabel labstate;
@@ -1865,8 +1873,6 @@
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.StatusStrip status2;
-        private System.Windows.Forms.ToolStripStatusLabel status4;
         private System.Windows.Forms.ToolStrip toolStrip7;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox2;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
@@ -1874,6 +1880,14 @@
         private System.Windows.Forms.ContextMenuStrip contextImportTable;
         private System.Windows.Forms.ToolStripMenuItem cloneToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
+        private System.Windows.Forms.TabControl tabControl3;
+        private System.Windows.Forms.TabPage tabExRaw;
+        private Be.Windows.Forms.HexBox hb2;
+        private System.Windows.Forms.StatusStrip status2;
+        private System.Windows.Forms.ToolStripStatusLabel status4;
+        private System.Windows.Forms.TabPage tabExProp;
+        private Interpreter interpreter1;
+        private System.Windows.Forms.ToolStripButton editNameButton;
     }
 }
 

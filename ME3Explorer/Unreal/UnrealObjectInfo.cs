@@ -85,6 +85,32 @@ namespace ME3Explorer.Unreal
             "Quat", "Matrix", "IntPoint", "ActorReference", "ActorReference", "ActorReference", "PolyReference", "AimTransform", "AimTransform", "NavReference",
             "CoverReference", "CoverInfo", "CoverSlot", "BioRwBox", "BioMask4Property", "RwVector2", "RwVector3", "RwVector4", "BioRwBox44" };
 
+        #region struct default values
+        private static byte[] CoverReferenceDefault = { 
+            //SlotIdx
+            0x78, 0x45, 0, 0, 0, 0, 0, 0, 0xB6, 0x29, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //Direction
+            0x28, 0x1B, 0, 0, 0, 0, 0, 0, 0xB6, 0x29, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //Guid
+            0xC7, 0x26, 0, 0, 0, 0, 0, 0, 0x17, 0x48, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0, 0, 0, 0, 0, 0xC7, 0x26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //Actor
+            0xF7, 0, 0, 0, 0, 0, 0, 0, 0x62, 0x34, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //None
+            0x73, 0x33, 0, 0, 0, 0, 0, 0 };
+
+        private static byte[] PlaneDefault = { 
+            //X
+            0x09, 0x03, 0, 0, 0, 0, 0, 0, 0x15, 0x01, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //Y
+            0x0D, 0x03, 0, 0, 0, 0, 0, 0, 0x15, 0x01, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //Z
+            0x12, 0x03, 0, 0, 0, 0, 0, 0, 0x15, 0x01, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //W
+            0x04, 0x03, 0, 0, 0, 0, 0, 0, 0x15, 0x01, 0, 0, 0, 0, 0, 0, 0x04, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            //None
+            0xF0, 0x01, 0, 0, 0, 0, 0, 0 }; 
+        #endregion
+
         public static void loadfromJSON()
         {
             string path = Application.StartupPath + "//exec//ME3ObjectInfo.json";
@@ -152,41 +178,48 @@ namespace ME3Explorer.Unreal
 
         public static ArrayType getArrayType(PropertyInfo p)
         {
-            if (p.reference == "NameProperty")
+            if (p != null)
             {
-                return ArrayType.Name;
-            }
-            else if (Enums.ContainsKey(p.reference))
-            {
-                return ArrayType.Enum;
-            }
-            else if (p.reference == "BoolProperty")
-            {
-                return ArrayType.Bool;
-            }
-            else if (p.reference == "ByteProperty")
-            {
-                return ArrayType.Byte;
-            }
-            else if (p.reference == "StrProperty")
-            {
-                return ArrayType.String;
-            }
-            else if (p.reference == "FloatProperty")
-            {
-                return ArrayType.Float;
-            }
-            else if (p.reference == "IntProperty")
-            {
-                return ArrayType.Int;
-            }
-            else if (Structs.ContainsKey(p.reference))
-            {
-                return ArrayType.Struct;
+                if (p.reference == "NameProperty")
+                {
+                    return ArrayType.Name;
+                }
+                else if (Enums.ContainsKey(p.reference))
+                {
+                    return ArrayType.Enum;
+                }
+                else if (p.reference == "BoolProperty")
+                {
+                    return ArrayType.Bool;
+                }
+                else if (p.reference == "ByteProperty")
+                {
+                    return ArrayType.Byte;
+                }
+                else if (p.reference == "StrProperty")
+                {
+                    return ArrayType.String;
+                }
+                else if (p.reference == "FloatProperty")
+                {
+                    return ArrayType.Float;
+                }
+                else if (p.reference == "IntProperty")
+                {
+                    return ArrayType.Int;
+                }
+                else if (Structs.ContainsKey(p.reference))
+                {
+                    return ArrayType.Struct;
+                }
+                else
+                {
+                    return ArrayType.Object;
+                } 
             }
             else
             {
-                return ArrayType.Object;
+                return ArrayType.Int;
             }
         }
 
@@ -233,24 +266,45 @@ namespace ME3Explorer.Unreal
             return null;
         }
         
-        public static byte[] getDefaultClassValue(PCCObject pcc, string className)
+        public static byte[] getDefaultClassValue(PCCObject pcc, string className, bool fullProps = false)
         {
             if (Structs.ContainsKey(className))
             {
+                bool isImmutable = ImmutableStructs.Contains(className);
                 ClassInfo info = Structs[className];
                 PCCObject importPCC = new PCCObject(Path.Combine(ME3Directory.gamePath, @"BIOGame\" + info.pccPath));
-                PCCObject.ExportEntry entry = importPCC.Exports[info.exportIndex];
-                List<PropertyReader.Property> Props = PropertyReader.ReadProp(importPCC, entry.Data, 0x24);
-                MemoryStream m = new MemoryStream(entry.DataSize - 0x24);
+                byte[] buff;
+                //Plane and CoverReference inherit from other structs, meaning they don't have default values (who knows why)
+                //thus, I have hardcoded what those default values should be 
+                if (className == "Plane")
+                {
+                    buff = PlaneDefault;
+                }
+                else if (className == "CoverReference")
+                {
+                    buff = CoverReferenceDefault;
+                }
+                else
+                {
+                    buff = importPCC.Exports[info.exportIndex].Data.Skip(0x24).ToArray();
+                }
+                List<PropertyReader.Property> Props = PropertyReader.ReadProp(importPCC, buff, 0);
+                MemoryStream m = new MemoryStream();
                 foreach (PropertyReader.Property p in Props)
                 {
                     string propName = importPCC.getNameEntry(p.Name);
-                    if (!info.properties.ContainsKey(propName) && propName != "None")
+                    //check if property is transient, if so, skip (neither of the structs that inherit have transient props)
+                    if (info.properties.ContainsKey(propName) || propName == "None" || info.baseClass != "Class")
                     {
-                        //property is transient
-                        continue;
+                        if (isImmutable && !fullProps)
+                        {
+                            PropertyReader.ImportImmutableProperty(pcc, importPCC, p, className, m, true);
+                        }
+                        else
+                        {
+                            PropertyReader.ImportProperty(pcc, importPCC, p, className, m, true);
+                        }
                     }
-                    PropertyReader.ImportProperty(pcc, importPCC, p, className, m, true);
                 }
                 return m.ToArray();
             }
@@ -273,6 +327,20 @@ namespace ME3Explorer.Unreal
                 return m.ToArray();
             }
             return null;
+        }
+
+        public static bool inheritsFrom(this PCCObject.IEntry entry, string baseClass)
+        {
+            string className = entry.ClassName;
+            while (Classes.ContainsKey(className))
+            {
+                if (className == baseClass)
+                {
+                    return true;
+                }
+                className = Classes[className].baseClass;
+            }
+            return false;
         }
 
         #region Generating
@@ -303,7 +371,8 @@ namespace ME3Explorer.Unreal
                             {
                                 Classes.Add(objectName, generateClassInfo(j, pcc));
                             }
-                            if ((objectName.Contains("SeqAct") || objectName.Contains("SeqCond") || objectName == "SequenceOp" || objectName == "SequenceAction" || objectName == "SequenceCondition") && !SequenceObjects.ContainsKey(objectName))
+                            if ((objectName.Contains("SeqAct") || objectName.Contains("SeqCond") ||  objectName.Contains("SequenceLatentAction") ||
+                                objectName == "SequenceOp" || objectName == "SequenceAction" || objectName == "SequenceCondition") && !SequenceObjects.ContainsKey(objectName))
                             {
                                 SequenceObjects.Add(objectName, generateSequenceObjectInfo(j, pcc));
                             }
@@ -415,6 +484,8 @@ namespace ME3Explorer.Unreal
                     p.type = PropertyReader.Type.DelegateProperty;
                     break;
                 case "ObjectProperty":
+                case "ClassProperty":
+                case "ComponentProperty":
                     p.type = PropertyReader.Type.ObjectProperty;
                     p.reference = pcc.getObjectName(BitConverter.ToInt32(entry.Data, entry.Data.Length - 4));
                     break;
@@ -467,9 +538,7 @@ namespace ME3Explorer.Unreal
                         p = null;
                     }
                     break;
-                case "ClassProperty":
                 case "InterfaceProperty":
-                case "ComponentProperty":
                 default:
                     p = null;
                     break;

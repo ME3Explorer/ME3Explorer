@@ -18,11 +18,14 @@ namespace ME3Explorer
         {
             InitializeComponent();
             string className = pcc.Exports[index].ClassName;
-            interpreter1.pcc = pcc;
+            interpreter1.Pcc = pcc;
             interpreter1.Index = index;
             interpreter1.InitInterpreter();
             toolStripStatusLabel1.Text = "Class: " + className + ", Export Index: " + index;
             toolStripStatusLabel2.Text = "@" + Path.GetFileName(pcc.pccFileName);
+            interpreter1.hb1.ReadOnly = true;
+            interpreter1.saveHexButton.Visible = false;
+            interpreter1.exportButton.Visible = true;
         }
 
         public new void Show()

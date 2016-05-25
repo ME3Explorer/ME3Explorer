@@ -7,18 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Be.Windows.Forms;
-using ME3Explorer.Unreal;
-using ME3Explorer.Unreal.Classes;
 using KFreonLib.MEDirectories;
 using System.Diagnostics;
+using ME3LibWV;
 
-namespace ME3Explorer
+namespace ME3Creator
 {
     public partial class Interpreter : UserControl
     {
         public event PropertyValueChangedEventHandler PropertyValueChanged;
 
-        public PCCObject Pcc { get { return pcc; } set {pcc = value; defaultStructValues.Clear(); } }
+        public PCCPackage Pcc { get { return pcc; } set { pcc = value; defaultStructValues.Clear(); } }
         public int Index;
         public string className;
         public byte[] memory;
@@ -99,7 +98,7 @@ namespace ME3Explorer
         private TreeNode LAST_SELECTED_NODE = null; //last selected tree node
         private const int HEXBOX_MAX_WIDTH = 650;
 
-        private PCCObject pcc;
+        private PCCPackage pcc;
         private Dictionary<string, List<PropertyReader.Property>> defaultStructValues;
 
         public Interpreter()
@@ -111,10 +110,8 @@ namespace ME3Explorer
 
         public void InitInterpreter()
         {
-            DynamicByteProvider db = new DynamicByteProvider(pcc.Exports[Index].Data);
-            hb1.ByteProvider = db;
             memory = pcc.Exports[Index].Data;
-            className = pcc.Exports[Index].ClassName;
+            className = pcc.getObjectName(pcc.Exports[Index].idxClass);
             StartScan();
         }
 
@@ -129,10 +126,9 @@ namespace ME3Explorer
             hidePropEditingControls();
             treeView1.BeginUpdate();
             treeView1.Nodes.Clear();
-            readerpos = PropertyReader.detectStart(pcc, memory, pcc.Exports[Index].ObjectFlags);
-            BitConverter.IsLittleEndian = true;
+            readerpos = PropertyReader.detectStart(pcc, memory, (uint)pcc.Exports[Index].ObjectFlags);
             List<PropHeader> topLevelHeaders = ReadHeadersTillNone();
-            TreeNode topLevelTree = new TreeNode("0000 : " + pcc.Exports[Index].ObjectName);
+            TreeNode topLevelTree = new TreeNode("0000 : " + pcc.GetName(pcc.Exports[Index].idxName));
             topLevelTree.Tag = nodeType.Root;
             topLevelTree.Name = "0";
             try
@@ -142,7 +138,6 @@ namespace ME3Explorer
             catch (Exception)
             {
                 topLevelTree.Nodes.Add("PARSE ERROR");
-                addPropButton.Visible = false;
             }
             treeView1.Nodes.Add(topLevelTree);
             treeView1.CollapseAll();
@@ -196,7 +191,7 @@ namespace ME3Explorer
                 {
                     throw new Exception();
                 }
-                nodeType type = getType(pcc.getNameEntry(header.type));
+                nodeType type = getType(pcc.GetName(header.type));
                 if (type != nodeType.ArrayProperty && type != nodeType.StructProperty)
                     localRoot.Nodes.Add(GenerateNode(header));
                 else
@@ -210,7 +205,7 @@ namespace ME3Explorer
                         UnrealObjectInfo.ArrayType arrayType;
                         try
                         {
-                            arrayType = UnrealObjectInfo.getArrayType(className, pcc.getNameEntry(header.name));
+                            arrayType = UnrealObjectInfo.getArrayType(className, pcc.GetName(header.name));
                         }
                         catch (Exception)
                         {
@@ -218,7 +213,7 @@ namespace ME3Explorer
                         }
                         if (arrayType == UnrealObjectInfo.ArrayType.Struct)
                         {
-                            UnrealObjectInfo.PropertyInfo info = UnrealObjectInfo.getPropertyInfo(className, pcc.getNameEntry(header.name));
+                            UnrealObjectInfo.PropertyInfo info = UnrealObjectInfo.getPropertyInfo(className, pcc.GetName(header.name));
                             t.Text = t.Text.Insert(t.Text.IndexOf("Size: ") - 2, $"({info.reference})");
                             for (int i = 0; i < arrayLength; i++)
                             {
@@ -286,7 +281,7 @@ namespace ME3Explorer
                                         {
                                             if (pcc.Imports.Count > value)
                                             {
-                                                s += pcc.Imports[value].ObjectName + " [IMPORT " + value + "]";
+                                                s += pcc.GetName(pcc.Imports[value].idxName) + " [IMPORT " + value + "]";
                                             }
                                             else
                                             {
@@ -297,7 +292,7 @@ namespace ME3Explorer
                                         {
                                             if (pcc.Exports.Count > value)
                                             {
-                                                s += pcc.Exports[value].ObjectName + " [EXPORT " + value + "]";
+                                                s += pcc.GetName(pcc.Exports[value].idxName) + " [EXPORT " + value + "]";
                                             }
                                             else
                                             {
@@ -384,7 +379,7 @@ namespace ME3Explorer
                         }
                         else
                         {
-                            string structType = pcc.getNameEntry(BitConverter.ToInt32(memory, header.offset + 24));
+                            string structType = pcc.GetName(BitConverter.ToInt32(memory, header.offset + 24));
                             GenerateSpecialStruct(t, structType, header.size);
                         }
                         localRoot.Nodes.Add(t);
@@ -431,7 +426,7 @@ namespace ME3Explorer
                     }
                     for (int i = 0; i < props.Count; i++)
                     {
-                        string s = readerpos.ToString("X4") + ": " + pcc.getNameEntry(props[i].Name) + " : ";
+                        string s = readerpos.ToString("X4") + ": " + pcc.GetName(props[i].Name) + " : ";
                         readerpos = GenerateSpecialStructProp(t, s, readerpos, props[i]);
                     }
                 } 
@@ -646,8 +641,7 @@ namespace ME3Explorer
                     break;
                 case PropertyReader.Type.StringRefProperty:
                     n = BitConverter.ToInt32(memory, pos);
-                    s += "#" + n + ": ";
-                    s += TalkFiles.tlkList.Count == 0 ? "(.tlk not loaded)" : TalkFiles.findDataById(n);
+                    s += "#" + n;
                     node = new TreeNode(s);
                     node.Name = pos.ToString();
                     node.Tag = nodeType.StructLeafInt;
@@ -657,7 +651,7 @@ namespace ME3Explorer
                 case PropertyReader.Type.NameProperty:
                     n = BitConverter.ToInt32(memory, pos);
                     pos += 4;
-                    s += "\"" + pcc.getNameEntry(n) + "\"_" + BitConverter.ToInt32(memory, pos);
+                    s += "\"" + pcc.GetName(n) + "\"_" + BitConverter.ToInt32(memory, pos);
                     node = new TreeNode(s);
                     node.Name = pos.ToString();
                     node.Tag = nodeType.StructLeafName;
@@ -675,12 +669,12 @@ namespace ME3Explorer
                 case PropertyReader.Type.ByteProperty:
                     if (prop.Size != 1)
                     {
-                        string enumName = UnrealObjectInfo.getPropertyInfo(className, pcc.getNameEntry(prop.Name))?.reference;
+                        string enumName = UnrealObjectInfo.getPropertyInfo(className, pcc.GetName(prop.Name))?.reference;
                         if (enumName != null)
                         {
                             s += "\"" + enumName + "\", ";
                         }
-                        s += "\"" + pcc.getNameEntry(BitConverter.ToInt32(memory, pos)) + "\"";
+                        s += "\"" + pcc.GetName(BitConverter.ToInt32(memory, pos)) + "\"";
                         node = new TreeNode(s);
                         node.Name = pos.ToString();
                         node.Tag = nodeType.StructLeafEnum;
@@ -717,7 +711,7 @@ namespace ME3Explorer
                     node.Name = pos.ToString();
                     node.Tag = nodeType.StructLeafArray;
                     pos += 4;
-                    propInfo = UnrealObjectInfo.getPropertyInfo(className, pcc.getNameEntry(prop.Name));
+                    propInfo = UnrealObjectInfo.getPropertyInfo(className, pcc.GetName(prop.Name));
                     UnrealObjectInfo.ArrayType arrayType = UnrealObjectInfo.getArrayType(propInfo);
                     TreeNode node2;
                     string s2;
@@ -772,7 +766,7 @@ namespace ME3Explorer
                     t.Nodes.Add(node);
                     break;
                 case PropertyReader.Type.StructProperty:
-                    propInfo = UnrealObjectInfo.getPropertyInfo(className, pcc.getNameEntry(prop.Name));
+                    propInfo = UnrealObjectInfo.getPropertyInfo(className, pcc.GetName(prop.Name));
                     s += propInfo.reference;
                     node = new TreeNode(s);
                     node.Name = (-pos).ToString();
@@ -796,10 +790,10 @@ namespace ME3Explorer
         public TreeNode GenerateNode(PropHeader p)
         {
             string s = p.offset.ToString("X4") + ": ";
-            s += "Name: \"" + pcc.getNameEntry(p.name) + "\" ";
-            s += "Type: \"" + pcc.getNameEntry(p.type) + "\" ";
+            s += "Name: \"" + pcc.GetName(p.name) + "\" ";
+            s += "Type: \"" + pcc.GetName(p.type) + "\" ";
             s += "Size: " + p.size.ToString() + " Value: ";
-            nodeType propertyType = getType(pcc.getNameEntry(p.type));
+            nodeType propertyType = getType(pcc.GetName(p.type));
             int idx;
             byte val;
             switch (propertyType)
@@ -810,7 +804,15 @@ namespace ME3Explorer
                     break;
                 case nodeType.ObjectProperty:
                     idx = BitConverter.ToInt32(memory, p.offset + 24);
-                    s += idx.ToString() +  " (" + pcc.getObjectName(idx) + ")";
+                    s += idx.ToString();
+                    try
+                    {
+                        s += " (" + pcc.getObjectName(idx) + ")";
+                    }
+                    catch (Exception)
+                    {
+                        s += "()";
+                    }
                     break;
                 case nodeType.StrProperty:
                     int count = BitConverter.ToInt32(memory, p.offset + 24);
@@ -829,11 +831,11 @@ namespace ME3Explorer
                     break;
                 case nodeType.NameProperty:
                     idx = BitConverter.ToInt32(memory, p.offset + 24);
-                    s += "\"" + pcc.getNameEntry(idx) + "\"_" + BitConverter.ToInt32(memory, p.offset + 28);
+                    s += "\"" + pcc.GetName(idx) + "\"_" + BitConverter.ToInt32(memory, p.offset + 28);
                     break;
                 case nodeType.StructProperty:
                     idx = BitConverter.ToInt32(memory, p.offset + 24);
-                    s += "\"" + pcc.getNameEntry(idx) + "\"";
+                    s += "\"" + pcc.GetName(idx) + "\"";
                     break;
                 case nodeType.ByteProperty:
                     if(p.size == 1)
@@ -845,7 +847,7 @@ namespace ME3Explorer
 	                {
                         idx = BitConverter.ToInt32(memory, p.offset + 24);
                         int idx2 = BitConverter.ToInt32(memory, p.offset + 32);
-                        s += "\"" + pcc.getNameEntry(idx) + "\",\"" + pcc.getNameEntry(idx2) + "\""; 
+                        s += "\"" + pcc.GetName(idx) + "\",\"" + pcc.GetName(idx2) + "\""; 
                     }
                     break;
                 case nodeType.ArrayProperty:
@@ -854,8 +856,7 @@ namespace ME3Explorer
                     break;
                 case nodeType.StringRefProperty:
                     idx = BitConverter.ToInt32(memory, p.offset + 24);
-                    s += "#" + idx.ToString() + ": ";
-                    s += TalkFiles.tlkList.Count == 0 ? "(.tlk not loaded)" : TalkFiles.findDataById(idx);
+                    s += "#" + idx.ToString();
                     break;
             }
             TreeNode ret = new TreeNode(s);
@@ -891,10 +892,10 @@ namespace ME3Explorer
                     run = false;
                 else
                 {
-                    if (pcc.getNameEntry(p.name) != "None")
+                    if (pcc.GetName(p.name) != "None")
                     {
                         p.type = BitConverter.ToInt32(memory, readerpos + 8);
-                        if (!pcc.isName(p.type) || getType(pcc.getNameEntry(p.type)) == nodeType.Unknown)
+                        if (!pcc.isName(p.type) || getType(pcc.GetName(p.type)) == nodeType.Unknown)
                             run = false;
                         else
                         {
@@ -903,10 +904,10 @@ namespace ME3Explorer
                             p.offset = readerpos;
                             ret.Add(p);
                             readerpos += p.size + 24;
-                            if (getType(pcc.getNameEntry(p.type)) == nodeType.BoolProperty)//Boolbyte
+                            if (getType(pcc.GetName(p.type)) == nodeType.BoolProperty)//Boolbyte
                                 readerpos++;
-                            if (getType(pcc.getNameEntry(p.type)) == nodeType.StructProperty ||//StructName
-                                getType(pcc.getNameEntry(p.type)) == nodeType.ByteProperty)//byteprop
+                            if (getType(pcc.GetName(p.type)) == nodeType.StructProperty ||//StructName
+                                getType(pcc.GetName(p.type)) == nodeType.ByteProperty)//byteprop
                                 readerpos += 8;
                         }
                     }
@@ -929,7 +930,7 @@ namespace ME3Explorer
         {
             SaveFileDialog d = new SaveFileDialog();
             d.Filter = "*.txt|*.txt";
-            d.FileName = pcc.Exports[Index].ObjectName + ".txt";
+            d.FileName = pcc.GetName(pcc.Exports[Index].idxName) + ".txt";
             if (d.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = new FileStream(d.FileName, FileMode.Create, FileAccess.Write);
@@ -980,7 +981,7 @@ namespace ME3Explorer
                 {
                     continue;
                 }
-                propname = pcc.getNameEntry(BitConverter.ToInt32(memory, Math.Abs(Convert.ToInt32(node.Name))));
+                propname = pcc.GetName(BitConverter.ToInt32(memory, Math.Abs(Convert.ToInt32(node.Name))));
                 p = UnrealObjectInfo.getPropertyInfo(typeName, propname, isStruct);
                 typeName = p.reference;
                 isStruct = true;
@@ -1017,9 +1018,7 @@ namespace ME3Explorer
             try
             {
                 int off = Math.Abs(Convert.ToInt32(e.Node.Name));
-                hb1.SelectionStart = off;
                 lastSetOffset = off;
-                hb1.SelectionLength = 1;
                 if (e.Node.Tag == null)
                 {
                     LAST_SELECTED_PROP_TYPE = nodeType.Unknown;
@@ -1038,7 +1037,7 @@ namespace ME3Explorer
                 {
                     addArrayElementButton.Visible = true;
                     proptext.Clear();
-                    UnrealObjectInfo.ArrayType arrayType = UnrealObjectInfo.getArrayType(getEnclosingType(e.Node.Parent), pcc.getNameEntry(BitConverter.ToInt32(memory, off)));
+                    UnrealObjectInfo.ArrayType arrayType = UnrealObjectInfo.getArrayType(getEnclosingType(e.Node.Parent), pcc.GetName(BitConverter.ToInt32(memory, off)));
                     switch (arrayType)
                     {
                         case UnrealObjectInfo.ArrayType.Byte:
@@ -1085,14 +1084,6 @@ namespace ME3Explorer
                             break;
                     }
                 }
-                else if (LAST_SELECTED_PROP_TYPE == nodeType.Root)
-                {
-                    addPropButton.Visible = true;
-                }
-                else if (LAST_SELECTED_PROP_TYPE == nodeType.None && e.Node.Parent.Tag != null && e.Node.Parent.Tag.Equals(nodeType.Root))
-                {
-                    addPropButton.Visible = true;
-                }
                 else
                 {
                     TryParseProperty();
@@ -1111,21 +1102,21 @@ namespace ME3Explorer
         {
             objectNameLabel.Visible = nameEntry.Visible = proptext.Visible = setPropertyButton.Visible = propDropdown.Visible = 
                 addArrayElementButton.Visible = deleteArrayElementButton.Visible = moveDownButton.Visible =
-                moveUpButton.Visible = addPropButton.Visible = false;
+                moveUpButton.Visible = false;
         }
 
         private void TryParseProperty()
         {
             try
             {
-                int pos = (int)hb1.SelectionStart;
+                int pos = lastSetOffset;
                 if (memory.Length - pos < 16)
                     return;
                 int type = BitConverter.ToInt32(memory, pos + 8);
                 int test = BitConverter.ToInt32(memory, pos + 12);
                 if (test != 0 || !pcc.isName(type))
                     return;
-                switch (pcc.getNameEntry(type))
+                switch (pcc.GetName(type))
                 {
                     case "IntProperty":
                     case "StringRefProperty":
@@ -1151,7 +1142,7 @@ namespace ME3Explorer
                         break;
                     case "NameProperty":
                         proptext.Text  = BitConverter.ToInt32(memory, pos + 28).ToString();
-                        nameEntry.Text = pcc.getNameEntry(BitConverter.ToInt32(memory, pos + 24));
+                        nameEntry.Text = pcc.GetName(BitConverter.ToInt32(memory, pos + 24));
                         nameEntry.AutoCompleteCustomSource.AddRange(pcc.Names.ToArray());
                         nameEntry.Visible = true;
                         proptext.Visible = true;
@@ -1168,7 +1159,7 @@ namespace ME3Explorer
                         proptext.Visible = true;
                         break;
                     case "ByteProperty":
-                        string enumName = pcc.getNameEntry(BitConverter.ToInt32(memory, pos + 24));
+                        string enumName = pcc.GetName(BitConverter.ToInt32(memory, pos + 24));
                         if (enumName != "None")
                         {
                             try
@@ -1178,7 +1169,7 @@ namespace ME3Explorer
                                 {
                                     propDropdown.Items.Clear();
                                     propDropdown.Items.AddRange(values.ToArray());
-                                    string curVal = pcc.getNameEntry(BitConverter.ToInt32(memory, pos + 32));
+                                    string curVal = pcc.GetName(BitConverter.ToInt32(memory, pos + 32));
                                     int idx = values.IndexOf(curVal);
                                     propDropdown.SelectedIndex = idx;
                                     propDropdown.Visible = true;
@@ -1210,7 +1201,7 @@ namespace ME3Explorer
             try
             {
                 nodeType type = (nodeType)node.Tag;
-                int pos = (int)hb1.SelectionStart;
+                int pos = lastSetOffset;
                 if (memory.Length - pos < 8)
                     return;
                 switch (type)
@@ -1246,7 +1237,7 @@ namespace ME3Explorer
                         break;
                     case nodeType.StructLeafName:
                         proptext.Text = BitConverter.ToInt32(memory, pos + 4).ToString();
-                        nameEntry.Text = pcc.getNameEntry(BitConverter.ToInt32(memory, pos));
+                        nameEntry.Text = pcc.GetName(BitConverter.ToInt32(memory, pos));
                         nameEntry.AutoCompleteCustomSource.AddRange(pcc.Names.ToArray());
                         nameEntry.Visible = proptext.Visible = true;
                         break;
@@ -1271,7 +1262,7 @@ namespace ME3Explorer
                         propDropdown.Items.Clear();
                         propDropdown.Items.AddRange(values.ToArray());
                         setPropertyButton.Visible = propDropdown.Visible = true;
-                        string curVal = pcc.getNameEntry(BitConverter.ToInt32(memory, pos));
+                        string curVal = pcc.GetName(BitConverter.ToInt32(memory, pos));
                         int idx = values.IndexOf(curVal);
                         propDropdown.SelectedIndex = idx;
                         break;
@@ -1291,7 +1282,7 @@ namespace ME3Explorer
             try
             {
                 nodeType type = (nodeType)node.Tag;
-                int pos = (int)hb1.SelectionStart;
+                int pos = lastSetOffset;
                 if (memory.Length - pos < 8)
                     return;
                 switch (type)
@@ -1323,7 +1314,7 @@ namespace ME3Explorer
                         break;
                     case nodeType.ArrayLeafName:
                         proptext.Text = BitConverter.ToInt32(memory, pos + 4).ToString();
-                        nameEntry.Text = pcc.getNameEntry(BitConverter.ToInt32(memory, pos));
+                        nameEntry.Text = pcc.GetName(BitConverter.ToInt32(memory, pos));
                         nameEntry.AutoCompleteCustomSource.AddRange(pcc.Names.ToArray());
                         proptext.Visible = nameEntry.Visible = true;
                         break;
@@ -1347,7 +1338,7 @@ namespace ME3Explorer
                         propDropdown.Items.Clear();
                         propDropdown.Items.AddRange(values.ToArray());
                         propDropdown.Visible = true;
-                        string curVal = pcc.getNameEntry(BitConverter.ToInt32(memory, pos));
+                        string curVal = pcc.GetName(BitConverter.ToInt32(memory, pos));
                         int idx = values.IndexOf(curVal);
                         propDropdown.SelectedIndex = idx;
                         break;
@@ -1378,10 +1369,6 @@ namespace ME3Explorer
 
         private void setProperty_Click(object sender, EventArgs e)
         {
-            if (hb1.SelectionStart != lastSetOffset)
-            {
-                return; //user manually moved cursor
-            }
             if (isArrayLeaf(LAST_SELECTED_PROP_TYPE))
             {
                 setArrayProperty();
@@ -1452,7 +1439,7 @@ namespace ME3Explorer
                         if (int.TryParse(proptext.Text, out i))
                         {
                             if (!pcc.Names.Contains(nameEntry.Text) &&
-                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.pccFileName)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
+                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.GeneralInfo.filepath)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
                             {
                                 break;
                             }
@@ -1521,7 +1508,7 @@ namespace ME3Explorer
         {
             try
             {
-                int pos = (int)hb1.SelectionStart;
+                int pos = lastSetOffset;
                 if (memory.Length - pos < 16)
                     return;
                 int type = BitConverter.ToInt32(memory, pos + 8);
@@ -1531,7 +1518,7 @@ namespace ME3Explorer
                 int i = 0;
                 float f = 0;
                 byte b = 0;
-                switch (pcc.getNameEntry(type))
+                switch (pcc.GetName(type))
                 {
                     case "IntProperty":
                     case "ObjectProperty":
@@ -1546,7 +1533,7 @@ namespace ME3Explorer
                         if (int.TryParse(proptext.Text, out i))
                         {
                             if (!pcc.Names.Contains(nameEntry.Text) &&
-                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.pccFileName)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
+                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.GeneralInfo.filepath)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
                             {
                                 break;
                             }
@@ -1642,7 +1629,7 @@ namespace ME3Explorer
         {
             try
             {
-                int pos = (int)hb1.SelectionStart;
+                int pos = lastSetOffset;
                 if (memory.Length - pos < 8)
                     return;
                 int i = 0;
@@ -1681,7 +1668,7 @@ namespace ME3Explorer
                         if (int.TryParse(proptext.Text, out i))
                         {
                             if (!pcc.Names.Contains(nameEntry.Text) &&
-                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.pccFileName)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
+                                DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.GeneralInfo.filepath)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
                             {
                                 break;
                             }
@@ -1756,11 +1743,7 @@ namespace ME3Explorer
         {
             try
             {
-                int pos = (int)hb1.SelectionStart;
-                if (hb1.SelectionStart != lastSetOffset)
-                {
-                    return new byte[0]; //user manually moved cursor
-                }
+                int pos = lastSetOffset;
 
                 if (memory.Length - pos < 8) //not long enough to deal with
                     return new byte[0];
@@ -1841,11 +1824,7 @@ namespace ME3Explorer
         {
             try
             {
-                int pos = (int)hb1.SelectionStart;
-                if (hb1.SelectionStart != lastSetOffset)
-                {
-                    return; //user manually moved cursor
-                }
+                int pos = lastSetOffset;
                 bool isLeaf = false;
                 int leafOffset = 0;
                 //is a leaf
@@ -1859,7 +1838,7 @@ namespace ME3Explorer
                 int size = BitConverter.ToInt32(memory, pos + 16);
                 int count = BitConverter.ToInt32(memory, pos + 24);
                 int leafSize = 0;
-                string propName = pcc.getNameEntry(BitConverter.ToInt32(memory, pos));
+                string propName = pcc.GetName(BitConverter.ToInt32(memory, pos));
                 UnrealObjectInfo.ArrayType arrayType = UnrealObjectInfo.getArrayType(getEnclosingType(LAST_SELECTED_NODE.Parent), propName);
                 List<byte> memList = memory.ToList();
                 int i;
@@ -1912,7 +1891,7 @@ namespace ME3Explorer
                             return; //not valid
                         }
                         if (!pcc.Names.Contains(nameEntry.Text) &&
-                            DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.pccFileName)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
+                            DialogResult.No == MessageBox.Show($"{Path.GetFileName(pcc.GeneralInfo.filepath)} does not contain the Name: {nameEntry.Text}\nWould you like to add it to the Name list?", "", MessageBoxButtons.YesNo))
                         {
                             return;
                         }
@@ -2041,8 +2020,10 @@ namespace ME3Explorer
 
         private void RefreshMem(int? selectedNodePos = null)
         {
-            pcc.Exports[Index].Data = memory;
-            hb1.ByteProvider = new DynamicByteProvider(memory);
+            PCCPackage.ExportEntry ent = pcc.Exports[Index];
+            ent.Data = memory;
+            ent.Datasize = memory.Length;
+            pcc.Exports[Index] = ent;
             //adds rootnode to list
             List<TreeNode> allNodes = treeView1.Nodes.Cast<TreeNode>().ToList();
             //flatten tree of nodes into list.
@@ -2131,10 +2112,6 @@ namespace ME3Explorer
 
         private void moveElement(bool up)
         {
-            if (hb1.SelectionStart != lastSetOffset)
-            {
-                return;//user manually moved cursor
-            }
             int pos;
             TreeNode node;
             TreeNode parent = LAST_SELECTED_NODE.Parent;
@@ -2190,154 +2167,6 @@ namespace ME3Explorer
             }
         }
 
-        private void addPropButton_Click(object sender, EventArgs e)
-        {
-            List<string> props = PropertyReader.getPropList(pcc, pcc.Exports[Index]).Select(x => pcc.getNameEntry(x.Name)).ToList();
-            string prop = AddPropertyDialog.GetProperty(className, props);
-            if (prop != null)
-            {
-                UnrealObjectInfo.PropertyInfo info = UnrealObjectInfo.getPropertyInfo(className, prop);
-                List<byte> buff = new List<byte>();
-                //name
-                buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd(prop)));
-                buff.AddRange(new byte[4]);
-                //type
-                buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd(info.type.ToString())));
-                buff.AddRange(new byte[4]);
-
-                switch (info.type)
-                {
-                    case PropertyReader.Type.IntProperty:
-                    case PropertyReader.Type.StringRefProperty:
-                    case PropertyReader.Type.FloatProperty:
-                    case PropertyReader.Type.ObjectProperty:
-                    case PropertyReader.Type.ArrayProperty:
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(4));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        break;
-                    case PropertyReader.Type.NameProperty:
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(8));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd("None")));
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        break;
-                    case PropertyReader.Type.BoolProperty:
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.Add(0);
-                        break;
-                    case PropertyReader.Type.StrProperty:
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(6));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.AddRange(BitConverter.GetBytes(-1));
-                        buff.Add(0);
-                        buff.Add(0);
-                        break;
-                    case PropertyReader.Type.DelegateProperty:
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(12));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        buff.AddRange(BitConverter.GetBytes(0));
-                        break;
-                    case PropertyReader.Type.ByteProperty:
-                        if (info.reference == null)
-                        {
-                            //size
-                            buff.AddRange(BitConverter.GetBytes(1));
-                            buff.AddRange(new byte[4]);
-                            //value
-                            buff.Add(0);
-                        }
-                        else
-                        {
-                            //size
-                            buff.AddRange(BitConverter.GetBytes(8));
-                            buff.AddRange(new byte[4]);
-                            //enum Type
-                            buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd(info.reference)));
-                            buff.AddRange(new byte[4]);
-                            //value
-                            buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd("None")));
-                            buff.AddRange(new byte[4]);
-                        }
-                        break;
-                    case PropertyReader.Type.StructProperty:
-                        byte[] structBuff = UnrealObjectInfo.getDefaultClassValue(pcc, info.reference);
-                        if (structBuff == null)
-                        {
-                            return;
-                        }
-                        //size
-                        buff.AddRange(BitConverter.GetBytes(structBuff.Length));
-                        buff.AddRange(new byte[4]);
-                        //struct Type
-                        buff.AddRange(BitConverter.GetBytes(pcc.FindNameOrAdd(info.reference)));
-                        buff.AddRange(new byte[4]);
-                        //value
-                        buff.AddRange(structBuff);
-                        break;
-                    default:
-                        return;
-                }
-                int pos = Math.Abs(Convert.ToInt32(treeView1.Nodes[0].LastNode.Name));
-                List<byte> memlist = memory.ToList();
-                memlist.InsertRange(pos, buff);
-                memory = memlist.ToArray();
-                RefreshMem(pos);
-            }
-        }
-
-        private void splitContainer1_SplitterMoving(object sender, SplitterCancelEventArgs e)
-        {
-            //hack to set max width for SplitContainer1
-            splitContainer1.Panel2MinSize = splitContainer1.Width - HEXBOX_MAX_WIDTH;
-        }
-
-        private void toggleHexWidthButton_Click(object sender, EventArgs e)
-        {
-            if (splitContainer1.SplitterDistance > splitContainer1.Panel1MinSize)
-            {
-                splitContainer1.SplitterDistance = splitContainer1.Panel1MinSize;
-            }
-            else
-            {
-                splitContainer1.SplitterDistance = HEXBOX_MAX_WIDTH;
-            }
-        }
-
-        private void hb1_SelectionChanged(object sender, EventArgs e)
-        {
-            int start = (int)hb1.SelectionStart;
-            int len = (int)hb1.SelectionLength;
-            int size = (int)hb1.ByteProvider.Length;
-            if (start != -1 && start + len <= size)
-            {
-                string s = "Start=0x" + start.ToString("X8") + " ";
-                if (len > 0)
-                {
-                    s += "Length=0x" + len.ToString("X8") + " ";
-                    s += "End=0x" + (start + len - 1).ToString("X8"); 
-                }
-                selectionStatus.Text = s;
-            }
-            else
-            {
-                selectionStatus.Text = "Nothing Selected";
-            }
-        }
-
         private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -2345,7 +2174,7 @@ namespace ME3Explorer
                 treeView1.SelectedNode = e.Node;
                 if (e.Node.Nodes.Count != 0)
                 {
-                    nodeContextMenuStrip1.Show(MousePosition); 
+                    nodeContextMenuStrip1.Show(MousePosition);
                 }
             }
         }

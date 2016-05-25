@@ -31,14 +31,14 @@
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFromDLCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.altSavetestingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.appendSaveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.reconstructionSaveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveIntoDLCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.scanForCoalescedValuesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.recentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.saveHexChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hexConverterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editInInterpreterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replaceWithBINToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -73,7 +73,7 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.status2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.nameContextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.treeView1 = new System.Windows.Forms.TreeView();
@@ -82,7 +82,6 @@
             this.propertiesTab = new System.Windows.Forms.TabPage();
             this.propGrid = new System.Windows.Forms.PropertyGrid();
             this.interpreterTab = new System.Windows.Forms.TabPage();
-            this.interpreterControl = new ME3Explorer.Interpreter();
             this.infoTab = new System.Windows.Forms.TabPage();
             this.infoExportDataBox = new System.Windows.Forms.GroupBox();
             this.label10 = new System.Windows.Forms.Label();
@@ -123,12 +122,20 @@
             this.label12 = new System.Windows.Forms.Label();
             this.headerTab = new System.Windows.Forms.TabPage();
             this.hb2 = new Be.Windows.Forms.HexBox();
+            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
+            this.saveHeaderHexChangesBtn = new System.Windows.Forms.ToolStripButton();
             this.scriptTab = new System.Windows.Forms.TabPage();
             this.rtb1 = new System.Windows.Forms.RichTextBox();
+            this.nodeContextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cloneTreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cloneToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.interpreterControl = new ME3Explorer.Interpreter();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
-            this.contextMenuStrip1.SuspendLayout();
+            this.nameContextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -141,7 +148,10 @@
             this.infoHeaderBox.SuspendLayout();
             this.metaDataPage.SuspendLayout();
             this.headerTab.SuspendLayout();
+            this.toolStrip2.SuspendLayout();
             this.scriptTab.SuspendLayout();
+            this.nodeContextMenuStrip1.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -164,8 +174,8 @@
             this.loadToolStripMenuItem,
             this.loadFromDLCToolStripMenuItem,
             this.saveToolStripMenuItem,
-            this.saveAsMenuItem,
-            this.altSavetestingToolStripMenuItem,
+            this.appendSaveMenuItem,
+            this.reconstructionSaveMenuItem,
             this.saveIntoDLCToolStripMenuItem,
             this.scanForCoalescedValuesToolStripMenuItem,
             this.toolStripMenuItem1,
@@ -196,24 +206,24 @@
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.saveToolStripMenuItem.Text = "Save";
-            this.saveToolStripMenuItem.ToolTipText = "Save changes by appending changes to the end of the file";
+            this.saveToolStripMenuItem.ToolTipText = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
-            // saveAsMenuItem
+            // appendSaveMenuItem
             // 
-            this.saveAsMenuItem.Name = "saveAsMenuItem";
-            this.saveAsMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.saveAsMenuItem.Text = "Save As";
-            this.saveAsMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            this.appendSaveMenuItem.Name = "appendSaveMenuItem";
+            this.appendSaveMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.appendSaveMenuItem.Text = "Save As (append)";
+            this.appendSaveMenuItem.ToolTipText = "Save by appending changes to the end of the file";
+            this.appendSaveMenuItem.Click += new System.EventHandler(this.appendSaveToolStripMenuItem_Click);
             // 
-            // altSavetestingToolStripMenuItem
+            // reconstructionSaveMenuItem
             // 
-            this.altSavetestingToolStripMenuItem.Name = "altSavetestingToolStripMenuItem";
-            this.altSavetestingToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
-            this.altSavetestingToolStripMenuItem.Text = "Alt. Saving (old)";
-            this.altSavetestingToolStripMenuItem.ToolTipText = "Save changes by replacing changed imports/exports/names in the same location of t" +
-    "he file";
-            this.altSavetestingToolStripMenuItem.Click += new System.EventHandler(this.altSavetestingToolStripMenuItem_Click);
+            this.reconstructionSaveMenuItem.Name = "reconstructionSaveMenuItem";
+            this.reconstructionSaveMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.reconstructionSaveMenuItem.Text = "Save As (reconstruct)";
+            this.reconstructionSaveMenuItem.ToolTipText = "Save changes by reconstructing the PCC";
+            this.reconstructionSaveMenuItem.Click += new System.EventHandler(this.reconstructionSave_Click);
             // 
             // saveIntoDLCToolStripMenuItem
             // 
@@ -248,7 +258,7 @@
             // editToolStripMenuItem
             // 
             this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.saveHexChangesToolStripMenuItem,
+            this.hexConverterToolStripMenuItem,
             this.addNameToolStripMenuItem,
             this.editInInterpreterToolStripMenuItem,
             this.replaceWithBINToolStripMenuItem,
@@ -258,18 +268,18 @@
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
             // 
-            // saveHexChangesToolStripMenuItem
+            // hexConverterToolStripMenuItem
             // 
-            this.saveHexChangesToolStripMenuItem.Name = "saveHexChangesToolStripMenuItem";
-            this.saveHexChangesToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-            this.saveHexChangesToolStripMenuItem.Text = "Save Hex changes";
-            this.saveHexChangesToolStripMenuItem.ToolTipText = "Saves hex changes in-memory (not to disk)";
-            this.saveHexChangesToolStripMenuItem.Click += new System.EventHandler(this.saveHexChangesToolStripMenuItem_Click);
+            this.hexConverterToolStripMenuItem.AutoToolTip = true;
+            this.hexConverterToolStripMenuItem.Name = "hexConverterToolStripMenuItem";
+            this.hexConverterToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.hexConverterToolStripMenuItem.Text = "Hex Converter";
+            this.hexConverterToolStripMenuItem.Click += new System.EventHandler(this.hexConverterToolStripMenuItem_Click);
             // 
             // addNameToolStripMenuItem
             // 
             this.addNameToolStripMenuItem.Name = "addNameToolStripMenuItem";
-            this.addNameToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.addNameToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.addNameToolStripMenuItem.Text = "Add Name";
             this.addNameToolStripMenuItem.ToolTipText = "Add a name to the name table";
             this.addNameToolStripMenuItem.Click += new System.EventHandler(this.addNameToolStripMenuItem_Click);
@@ -277,7 +287,7 @@
             // editInInterpreterToolStripMenuItem
             // 
             this.editInInterpreterToolStripMenuItem.Name = "editInInterpreterToolStripMenuItem";
-            this.editInInterpreterToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.editInInterpreterToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.editInInterpreterToolStripMenuItem.Text = "Edit in Interpreter";
             this.editInInterpreterToolStripMenuItem.ToolTipText = "Open this export in the interpreter";
             this.editInInterpreterToolStripMenuItem.Click += new System.EventHandler(this.editInInterpreterToolStripMenuItem_Click);
@@ -285,14 +295,14 @@
             // replaceWithBINToolStripMenuItem
             // 
             this.replaceWithBINToolStripMenuItem.Name = "replaceWithBINToolStripMenuItem";
-            this.replaceWithBINToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.replaceWithBINToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.replaceWithBINToolStripMenuItem.Text = "Replace with BIN";
             this.replaceWithBINToolStripMenuItem.Click += new System.EventHandler(this.replaceWithBINToolStripMenuItem_Click);
             // 
             // editBlockingVolToolStripMenuItem
             // 
             this.editBlockingVolToolStripMenuItem.Name = "editBlockingVolToolStripMenuItem";
-            this.editBlockingVolToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.editBlockingVolToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.editBlockingVolToolStripMenuItem.Text = "Edit Blocking Vol";
             this.editBlockingVolToolStripMenuItem.Visible = false;
             this.editBlockingVolToolStripMenuItem.Click += new System.EventHandler(this.editBlockingVolToolStripMenuItem_Click);
@@ -303,7 +313,7 @@
             this.exportFaceFXToolStripMenuItem,
             this.importToolStripMenuItem});
             this.faceFXToolStripMenuItem.Name = "faceFXToolStripMenuItem";
-            this.faceFXToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.faceFXToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.faceFXToolStripMenuItem.Text = "FaceFX";
             // 
             // exportFaceFXToolStripMenuItem
@@ -542,12 +552,12 @@
             this.status2.Name = "status2";
             this.status2.Size = new System.Drawing.Size(0, 17);
             // 
-            // contextMenuStrip1
+            // nameContextMenuStrip1
             // 
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.nameContextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyToolStripMenuItem});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(103, 26);
+            this.nameContextMenuStrip1.Name = "contextMenuStrip1";
+            this.nameContextMenuStrip1.Size = new System.Drawing.Size(103, 26);
             // 
             // copyToolStripMenuItem
             // 
@@ -576,6 +586,7 @@
             // 
             // treeView1
             // 
+            this.treeView1.AllowDrop = true;
             this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.treeView1.HideSelection = false;
@@ -584,7 +595,12 @@
             this.treeView1.Size = new System.Drawing.Size(330, 444);
             this.treeView1.TabIndex = 1;
             this.treeView1.Visible = false;
+            this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
+            this.treeView1.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseClick);
+            this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
+            this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
+            this.treeView1.DragOver += new System.Windows.Forms.DragEventHandler(this.treeView1_DragOver);
             // 
             // listBox1
             // 
@@ -647,17 +663,8 @@
             this.interpreterTab.Padding = new System.Windows.Forms.Padding(3);
             this.interpreterTab.Size = new System.Drawing.Size(660, 418);
             this.interpreterTab.TabIndex = 6;
-            this.interpreterTab.Text = "Interpreter";
+            this.interpreterTab.Text = "Interpreter / Hex Editor";
             this.interpreterTab.UseVisualStyleBackColor = true;
-            // 
-            // interpreterControl
-            // 
-            this.interpreterControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.interpreterControl.Location = new System.Drawing.Point(3, 3);
-            this.interpreterControl.Name = "interpreterControl";
-            this.interpreterControl.Size = new System.Drawing.Size(654, 412);
-            this.interpreterControl.TabIndex = 0;
-            this.interpreterControl.Text = "interpreter";
             // 
             // infoTab
             // 
@@ -684,7 +691,7 @@
             this.infoExportDataBox.Controls.Add(this.label7);
             this.infoExportDataBox.Location = new System.Drawing.Point(4, 240);
             this.infoExportDataBox.Name = "infoExportDataBox";
-            this.infoExportDataBox.Size = new System.Drawing.Size(626, 195);
+            this.infoExportDataBox.Size = new System.Drawing.Size(626, 243);
             this.infoExportDataBox.TabIndex = 1;
             this.infoExportDataBox.TabStop = false;
             this.infoExportDataBox.Text = "Export data";
@@ -937,7 +944,7 @@
             // 
             this.indexTextBox.Location = new System.Drawing.Point(82, 126);
             this.indexTextBox.Name = "indexTextBox";
-            this.indexTextBox.Size = new System.Drawing.Size(42, 20);
+            this.indexTextBox.Size = new System.Drawing.Size(87, 20);
             this.indexTextBox.TabIndex = 11;
             // 
             // indexLabel
@@ -1030,6 +1037,7 @@
             // headerTab
             // 
             this.headerTab.Controls.Add(this.hb2);
+            this.headerTab.Controls.Add(this.toolStrip2);
             this.headerTab.Location = new System.Drawing.Point(4, 22);
             this.headerTab.Name = "headerTab";
             this.headerTab.Padding = new System.Windows.Forms.Padding(3);
@@ -1045,16 +1053,35 @@
             this.hb2.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.hb2.LineInfoForeColor = System.Drawing.Color.Empty;
             this.hb2.LineInfoVisible = true;
-            this.hb2.Location = new System.Drawing.Point(3, 3);
+            this.hb2.Location = new System.Drawing.Point(3, 28);
             this.hb2.MinBytesPerLine = 16;
             this.hb2.Name = "hb2";
-            this.hb2.ReadOnly = true;
             this.hb2.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
-            this.hb2.Size = new System.Drawing.Size(654, 412);
+            this.hb2.Size = new System.Drawing.Size(654, 387);
             this.hb2.StringViewVisible = true;
             this.hb2.TabIndex = 0;
             this.hb2.UseFixedBytesPerLine = true;
             this.hb2.VScrollBarVisible = true;
+            // 
+            // toolStrip2
+            // 
+            this.toolStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveHeaderHexChangesBtn});
+            this.toolStrip2.Location = new System.Drawing.Point(3, 3);
+            this.toolStrip2.Name = "toolStrip2";
+            this.toolStrip2.Size = new System.Drawing.Size(654, 25);
+            this.toolStrip2.TabIndex = 1;
+            this.toolStrip2.Text = "toolStrip2";
+            // 
+            // saveHeaderHexChangesBtn
+            // 
+            this.saveHeaderHexChangesBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.saveHeaderHexChangesBtn.Image = ((System.Drawing.Image)(resources.GetObject("saveHeaderHexChangesBtn.Image")));
+            this.saveHeaderHexChangesBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.saveHeaderHexChangesBtn.Name = "saveHeaderHexChangesBtn";
+            this.saveHeaderHexChangesBtn.Size = new System.Drawing.Size(107, 22);
+            this.saveHeaderHexChangesBtn.Text = "Save Hex Changes";
+            this.saveHeaderHexChangesBtn.Click += new System.EventHandler(this.saveHeaderHexChangesBtn_Click);
             // 
             // scriptTab
             // 
@@ -1076,10 +1103,55 @@
             this.rtb1.Location = new System.Drawing.Point(3, 3);
             this.rtb1.Name = "rtb1";
             this.rtb1.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.rtb1.Size = new System.Drawing.Size(654, 436);
+            this.rtb1.Size = new System.Drawing.Size(654, 484);
             this.rtb1.TabIndex = 2;
             this.rtb1.Text = "";
             this.rtb1.WordWrap = false;
+            // 
+            // nodeContextMenuStrip1
+            // 
+            this.nodeContextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cloneToolStripMenuItem,
+            this.cloneTreeToolStripMenuItem});
+            this.nodeContextMenuStrip1.Name = "nodeContextMenuStrip1";
+            this.nodeContextMenuStrip1.Size = new System.Drawing.Size(132, 48);
+            // 
+            // cloneToolStripMenuItem
+            // 
+            this.cloneToolStripMenuItem.Name = "cloneToolStripMenuItem";
+            this.cloneToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.cloneToolStripMenuItem.Text = "Clone";
+            this.cloneToolStripMenuItem.Click += new System.EventHandler(this.cloneToolStripMenuItem_Click);
+            // 
+            // cloneTreeToolStripMenuItem
+            // 
+            this.cloneTreeToolStripMenuItem.Name = "cloneTreeToolStripMenuItem";
+            this.cloneTreeToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.cloneTreeToolStripMenuItem.Text = "Clone Tree";
+            this.cloneTreeToolStripMenuItem.Click += new System.EventHandler(this.cloneTreeToolStripMenuItem_Click);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cloneToolStripMenuItem1});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(106, 26);
+            // 
+            // cloneToolStripMenuItem1
+            // 
+            this.cloneToolStripMenuItem1.Name = "cloneToolStripMenuItem1";
+            this.cloneToolStripMenuItem1.Size = new System.Drawing.Size(105, 22);
+            this.cloneToolStripMenuItem1.Text = "Clone";
+            this.cloneToolStripMenuItem1.Click += new System.EventHandler(this.cloneToolStripMenuItem_Click);
+            // 
+            // interpreterControl
+            // 
+            this.interpreterControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.interpreterControl.Location = new System.Drawing.Point(3, 3);
+            this.interpreterControl.Name = "interpreterControl";
+            this.interpreterControl.Pcc = null;
+            this.interpreterControl.Size = new System.Drawing.Size(654, 412);
+            this.interpreterControl.TabIndex = 0;
             // 
             // PackageEditor
             // 
@@ -1103,7 +1175,7 @@
             this.toolStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            this.contextMenuStrip1.ResumeLayout(false);
+            this.nameContextMenuStrip1.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -1119,7 +1191,12 @@
             this.metaDataPage.ResumeLayout(false);
             this.metaDataPage.PerformLayout();
             this.headerTab.ResumeLayout(false);
+            this.headerTab.PerformLayout();
+            this.toolStrip2.ResumeLayout(false);
+            this.toolStrip2.PerformLayout();
             this.scriptTab.ResumeLayout(false);
+            this.nodeContextMenuStrip1.ResumeLayout(false);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1139,7 +1216,7 @@
         public System.Windows.Forms.SplitContainer splitContainer1;
         public System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
         public System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-        public System.Windows.Forms.ToolStripMenuItem saveHexChangesToolStripMenuItem;
+        public System.Windows.Forms.ToolStripMenuItem hexConverterToolStripMenuItem;
         public System.Windows.Forms.OpenFileDialog openFileDialog;
         public System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         public System.Windows.Forms.ToolStripComboBox combo1;
@@ -1156,7 +1233,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButton4;
         public System.Windows.Forms.ToolStripMenuItem getDumpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replaceWithBINToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem altSavetestingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem reconstructionSaveMenuItem;
         private System.Windows.Forms.ToolStripMenuItem editBlockingVolToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem modjobsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem createBinaryReplaceJobFromFileToolStripMenuItem;
@@ -1221,11 +1298,18 @@
         private System.Windows.Forms.Label indexLabel;
         private System.Windows.Forms.Label archetypeLabel;
         private System.Windows.Forms.ComboBox archetypeComboBox;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ContextMenuStrip nameContextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
         private System.ComponentModel.IContainer components;
-        private System.Windows.Forms.ToolStripMenuItem saveAsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem appendSaveMenuItem;
         private System.Windows.Forms.TabPage interpreterTab;
         private Interpreter interpreterControl;
+        private System.Windows.Forms.ToolStrip toolStrip2;
+        private System.Windows.Forms.ToolStripButton saveHeaderHexChangesBtn;
+        private System.Windows.Forms.ContextMenuStrip nodeContextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem cloneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cloneTreeToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem cloneToolStripMenuItem1;
     }
 }

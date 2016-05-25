@@ -10,10 +10,7 @@ using System.Windows.Forms;
 using ME3Explorer.Unreal;
 using Be.Windows.Forms;
 using ME3Explorer.Unreal.Classes;
-using AmaroK86.ImageFormat;
 using KFreonLib.MEDirectories;
-using KFreonLib.PCCObjects;
-using KFreonLib.Textures;
 using UsefulThings;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -31,6 +28,7 @@ namespace ME3Explorer
 
         public PropGrid pg;
         private string currentFile;
+        private bool haveCloned;
 
         private List<int> ClassNames;
 
@@ -45,10 +43,10 @@ namespace ME3Explorer
             LoadRecentList();
             RefreshRecent();
             tabControl1.TabPages.Remove(scriptTab);
-
-            saveHexChangesToolStripMenuItem.Enabled = false;
+            
             SetView(EXPORTS_VIEW);
             interpreterControl.PropertyValueChanged += InterpreterControl_PropertyValueChanged;
+            interpreterControl.saveHexButton.Click += saveHexChangesButton_Click;
         }
 
         public void LoadMostRecent()
@@ -79,7 +77,11 @@ namespace ME3Explorer
             {
                 currentFile = s;
                 pcc = new PCCObject(s);
-                interpreterControl.pcc = pcc;
+                haveCloned = false;
+                appendSaveMenuItem.Enabled = true;
+                appendSaveMenuItem.ToolTipText = "Save by appending changes to the end of the file";
+                interpreterControl.Pcc = pcc;
+                treeView1.Tag = pcc;
                 RefreshView();
                 InitStuff();
                 if (!isfromdlc)
@@ -171,7 +173,7 @@ namespace ME3Explorer
                 LinkIdx = pcc.Imports[n].idxLink;
                 ArchetypeIdx = pcc.Imports[n].idxPackageFile;
 
-                archetypeLabel.Text = "Package";
+                archetypeLabel.Text = "Package File";
                 indexTextBox.Visible = indexLabel.Visible = false;
 
                 classComboBox.SelectedIndex = ClassIdx;
@@ -413,14 +415,11 @@ namespace ME3Explorer
             int n;
             if (tabControl1.SelectedTab == interpreterTab && GetSelected(out n) && n >= 0)
             {
-                saveHexChangesToolStripMenuItem.Enabled = true;
                 if (interpreterControl.treeView1.Nodes.Count > 0)
                 {
                     interpreterControl.treeView1.Nodes[0].Expand();
                 }
             }
-            else
-                saveHexChangesToolStripMenuItem.Enabled = false;
 
             if (tabControl1.SelectedTab == metaDataPage)
             {
@@ -503,6 +502,7 @@ namespace ME3Explorer
                 superclassTextBox.Visible = superclassLabel.Visible = true;
                 textBox6.Visible = label6.Visible = true;
                 textBox5.Visible = label5.Visible = true;
+                textBox10.Visible = label11.Visible = false;
                 infoExportDataBox.Visible = true;
                 textBox1.Text = pcc.Exports[n].ObjectName;
                 textBox2.Text = pcc.Exports[n].ClassName;
@@ -525,12 +525,12 @@ namespace ME3Explorer
                 superclassTextBox.Visible = superclassLabel.Visible = false;
                 textBox6.Visible = label6.Visible = false;
                 textBox5.Visible = label5.Visible = false;
+                textBox10.Visible = label11.Visible = false;
                 infoExportDataBox.Visible = false;
                 textBox1.Text = pcc.Imports[n].ObjectName;
                 textBox2.Text = pcc.Imports[n].ClassName;
                 textBox3.Text = pcc.Imports[n].PackageFullName;
                 textBox4.Text = pcc.Imports[n].header.Length + " bytes";
-                textBox10.Text = "0x" + pcc.Imports[n].ObjectFlags.ToString("X16");
             }
         }
 
@@ -552,18 +552,8 @@ namespace ME3Explorer
 
         public void UpdateStatusIm(int n)
         {
-            toolStripStatusLabel1.Text = $"Class:{pcc.Imports[n].ClassName} Flags: 0x{pcc.Imports[n].ObjectFlags.ToString("X16")} Link: {pcc.Imports[n].idxLink} ";
+            toolStripStatusLabel1.Text = $"Class:{pcc.Imports[n].ClassName} Link: {pcc.Imports[n].idxLink} ";
             toolStripStatusLabel1.ToolTipText = "";
-            foreach (string row in UnrealFlags.flagdesc)
-            {
-                string[] t = row.Split(',');
-                long l = long.Parse(t[1].Trim(), System.Globalization.NumberStyles.HexNumber);
-                if ((l & pcc.Imports[n].ObjectFlags) != 0)
-                {
-                    toolStripStatusLabel1.Text += "[" + t[0].Trim() + "] ";
-                    toolStripStatusLabel1.ToolTipText += "[" + t[0].Trim() + "] : " + t[2].Trim() + "\n";
-                }
-            }
         }
 
         public void PreviewProps(int n)
@@ -872,7 +862,7 @@ namespace ME3Explorer
             Preview();
         }
 
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void appendSaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (pcc == null)
                 return;
@@ -889,11 +879,18 @@ namespace ME3Explorer
         {
             if (pcc == null)
                 return;
-            pcc.altSaveToFile(pcc.pccFileName, true);
+            if (haveCloned)
+            {
+                pcc.saveByReconstructing(pcc.pccFileName);
+            }
+            else
+            {
+                pcc.altSaveToFile(pcc.pccFileName, true); 
+            }
             MessageBox.Show("Done");
         }
 
-        private void saveHexChangesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveHexChangesButton_Click(object sender, EventArgs e)
         {
             int n;
             if (pcc == null || !GetSelected(out n) || n < 0)
@@ -933,7 +930,7 @@ namespace ME3Explorer
             }
             if (CurrentView == IMPORTS_VIEW)
             {
-                for (int i = start; i < pcc.Exports.Count; i++)
+                for (int i = start; i < pcc.Imports.Count; i++)
                     if (pcc.Imports[i].ObjectName.ToLower().Contains(searchBox.Text.ToLower()))
                     {
                         listBox1.SelectedIndex = i;
@@ -1133,19 +1130,16 @@ namespace ME3Explorer
 
         public void Interpreter()
         {
-            //int n;
-            //if (pcc == null || !GetSelected(out n) || n < 0)
-            //{
-            //    return;
-            //}
-            //Interpreter2.Interpreter2 ip = new Interpreter2.Interpreter2();
-            //ip.Text = "Interpreter (Package Editor)";
-            //ip.MdiParent = this.MdiParent;
-            //ip.pcc = pcc;
-            //ip.Index = n;
-            //ip.InitInterpreter();
-            //ip.Show();
-            //taskbar.AddTool(ip, Properties.Resources.interpreter_icon_64x64);
+            int n;
+            if (pcc == null || !GetSelected(out n) || n < 0)
+            {
+                return;
+            }
+            InterpreterHost ip = new InterpreterHost(pcc, n);
+            ip.Text = "Interpreter (Package Editor)";
+            ip.MdiParent = this.MdiParent;
+            ip.Show();
+            taskbar.AddTool(ip, Properties.Resources.interpreter_icon_64x64);
         }
 
         private void toolStripButton3_Click(object sender, EventArgs e)
@@ -1157,8 +1151,11 @@ namespace ME3Explorer
         {
             if (gotonumber.Text == "")
                 return;
-            int n = Convert.ToInt32(gotonumber.Text);
-            goToNumber(n);
+            int n = 0;
+            if (int.TryParse(gotonumber.Text, out n))
+            {
+                goToNumber(n);
+            }
         }
 
         private void gotonumber_KeyPress(object sender, KeyPressEventArgs e)
@@ -1167,8 +1164,11 @@ namespace ME3Explorer
             {
                 if (gotonumber.Text == "")
                     return;
-                int n = Convert.ToInt32(gotonumber.Text);
-                goToNumber(n);
+                int n = 0;
+                if (int.TryParse(gotonumber.Text, out n))
+                {
+                    goToNumber(n);
+                }
             }
         }
 
@@ -1234,15 +1234,26 @@ namespace ME3Explorer
             }
         }
 
-        private void altSavetestingToolStripMenuItem_Click(object sender, EventArgs e)
+        private void reconstructionSave_Click(object sender, EventArgs e)
         {
             if (pcc == null)
                 return;
+            if (pcc.Exports.Exists(x => x.ObjectName == "SeekFreeShaderCache" && x.ClassName == "ShaderCache"))
+            {
+                var res = MessageBox.Show("This file contains a SeekFreeShaderCache. Performing a reconstruction save will cause a crash when ME3 attempts to load this file.\n" +
+                    "Do you want to visit a forum thread with more information and a possible solution?",
+                    "I'm sorry, Dave. I'm afraid I can't do that.", MessageBoxButtons.YesNo, MessageBoxIcon.Stop);
+                if (res == DialogResult.Yes)
+                {
+                    Process.Start("http://me3explorer.freeforums.org/research-how-to-turn-your-dlc-pcc-into-a-vanilla-one-t2264.html");
+                }
+                return;
+            }
             SaveFileDialog d = new SaveFileDialog();
             d.Filter = "*.pcc|*.pcc";
             if (d.ShowDialog() == DialogResult.OK)
             {
-                pcc.saveToFile(d.FileName, true);
+                pcc.saveByReconstructing(d.FileName);
                 MessageBox.Show("Done");
             }
         }
@@ -1641,6 +1652,10 @@ namespace ME3Explorer
             {
                 if (CurrentView == NAMES_VIEW)
                 {
+                    nameContextMenuStrip1.Show(MousePosition);
+                }
+                else
+                {
                     contextMenuStrip1.Show(MousePosition);
                 }
             }
@@ -1651,6 +1666,352 @@ namespace ME3Explorer
             if (CurrentView == NAMES_VIEW && listBox1.SelectedIndex != -1)
             {
                 Clipboard.SetText(pcc.Names[listBox1.SelectedIndex]);
+            }
+        }
+
+        private void hexConverterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            (new ME3Creator.Hexconverter()).Show();
+        }
+
+        private void saveHeaderHexChangesBtn_Click(object sender, EventArgs e)
+        {
+            int n;
+            if (pcc == null || !GetSelected(out n) || n < 0)
+            {
+                return;
+            }
+            MemoryStream m = new MemoryStream();
+            IByteProvider provider = hb2.ByteProvider;
+            if (provider.Length != 0x44)
+            {
+                MessageBox.Show("Invalid hex length");
+                return;
+            }
+            for (int i = 0; i < provider.Length; i++)
+                m.WriteByte(provider.ReadByte(i));
+            pcc.Exports[n].header = m.ToArray();
+
+            RefreshView();
+            goToNumber(n);
+        }
+
+        private void treeView1_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                treeView1.SelectedNode = e.Node;
+                //isn't root
+                if (e.Node.Name.Length > 0)
+                {
+                    //disable clone tree on nodes with no children
+                    cloneTreeToolStripMenuItem.Enabled = e.Node.Nodes.Count != 0;
+                    nodeContextMenuStrip1.Show(MousePosition);
+                }
+            }
+        }
+
+        private void cloneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!pcc.canClone())
+            {
+                return;
+            }
+            int n = 0;
+            if (GetSelected(out n))
+            {
+                haveCloned = true;
+                appendSaveMenuItem.Enabled = false;
+                appendSaveMenuItem.ToolTipText = "This method cannot be used if cloning has occured.";
+
+                if (n >= 0)
+                {
+                    PCCObject.ExportEntry ent = pcc.Exports[n].Clone();
+                    pcc.addExport(ent);
+                    RefreshView();
+                    goToNumber(pcc.Exports.Count - 1); 
+                }
+                else
+                {
+                    PCCObject.ImportEntry ent = pcc.Imports[-n - 1].Clone();
+                    pcc.addImport(ent);
+                    RefreshView();
+                    goToNumber(CurrentView == TREE_VIEW ? -pcc.Imports.Count : pcc.Imports.Count - 1);
+                }
+            }
+        }
+
+        private void cloneTreeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!pcc.canClone())
+            {
+                return;
+            }
+            int n = 0;
+            if (GetSelected(out n))
+            {
+                int nextIndex;
+                haveCloned = true;
+                appendSaveMenuItem.Enabled = false;
+                appendSaveMenuItem.ToolTipText = "This method cannot be used if cloning or importing has occured.";
+
+                TreeNode rootNode = treeView1.SelectedNode;
+                if (n >= 0)
+                {
+                    nextIndex = pcc.Exports.Count;
+                    PCCObject.ExportEntry exp = pcc.Exports[n].Clone();
+                    pcc.addExport(exp);
+
+                    n = nextIndex + 1;
+                }
+                else
+                {
+                    nextIndex = -pcc.Imports.Count - 1;
+                    PCCObject.ImportEntry imp = pcc.Imports[-n - 1].Clone();
+                    pcc.addImport(imp);
+
+                    n = nextIndex;
+                }
+                cloneTree(n, rootNode);
+
+                RefreshView();
+                goToNumber(nextIndex);
+            }
+        }
+
+        private void cloneTree(int n, TreeNode rootNode)
+        {
+            int index;
+            int nextIndex;
+            if (rootNode.Nodes.Count > 0)
+            {
+                foreach (TreeNode node in rootNode.Nodes)
+                {
+                    index = Convert.ToInt32(node.Name);
+                    if (index >= 0)
+                    {
+                        nextIndex = pcc.Exports.Count + 1;
+                        PCCObject.ExportEntry exp = pcc.Exports[index].Clone();
+                        exp.idxLink = n;
+                        pcc.addExport(exp);
+                    }
+                    else
+                    {
+                        nextIndex = -pcc.Imports.Count - 1;
+                        PCCObject.ImportEntry imp = pcc.Imports[-index - 1].Clone();
+                        imp.idxLink = n;
+                        pcc.addImport(imp);
+                    }
+                    if (node.Nodes.Count > 0)
+                    {
+                        cloneTree(nextIndex, node);
+                    }
+                }
+            }
+        }
+
+        private void treeView1_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            DoDragDrop(e.Item, DragDropEffects.Copy);
+        }
+
+        private void treeView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.Copy;
+        }
+
+        private void treeView1_DragDrop(object sender, DragEventArgs e)
+        {
+            TreeNode sourceNode;
+
+            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+            {
+                Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+                TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
+                sourceNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+                if (DestinationNode.TreeView != sourceNode.TreeView)
+                {
+                    if (!pcc.canClone())
+                    {
+                        return;
+                    }
+                    haveCloned = true;
+                    appendSaveMenuItem.Enabled = false;
+                    appendSaveMenuItem.ToolTipText = "This method cannot be used if importing has occured.";
+
+                    PCCObject importpcc = sourceNode.TreeView.Tag as PCCObject;
+                    int n = Convert.ToInt32(sourceNode.Name);
+                    int link;
+                    if (DestinationNode.Name == "")
+                    {
+                        link = 0;
+                    }
+                    else
+                    {
+                        link = Convert.ToInt32(DestinationNode.Name);
+                        link = link >= 0 ? link + 1 : link;
+                    }
+                    int nextIndex;
+                    if (n >= 0)
+                    {
+                        if(!importExport(importpcc, n, link))
+                        {
+                            return;
+                        }
+                        nextIndex = pcc.Exports.Count;
+                    }
+                    else
+                    {
+                        importImport(importpcc, -n - 1, link);
+                        nextIndex = -pcc.Imports.Count;
+                    }
+                    if (sourceNode.Nodes.Count > 0)
+                    {
+                        importTree(sourceNode, importpcc, nextIndex);
+                    }
+
+                    RefreshView();
+                    goToNumber(n >= 0 ? pcc.Exports.Count - 1 : -pcc.Imports.Count);
+                }
+            }
+        }
+
+        private bool importTree(TreeNode sourceNode, PCCObject importpcc, int n)
+        {
+            int nextIndex;
+            int index;
+            foreach (TreeNode node in sourceNode.Nodes)
+            {
+                index = Convert.ToInt32(node.Name);
+                if (index >= 0)
+                {
+                    if(!importExport(importpcc, index, n))
+                    {
+                        return false;
+                    }
+                    nextIndex = pcc.Exports.Count;
+                }
+                else
+                {
+                    importImport(importpcc, -index - 1, n);
+                    nextIndex = -pcc.Imports.Count;
+                }
+                if (node.Nodes.Count > 0)
+                {
+                    if(!importTree(node, importpcc, nextIndex))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void importImport(PCCObject importpcc, int n, int link)
+        {
+            PCCObject.ImportEntry imp = importpcc.Imports[n];
+            PCCObject.ImportEntry nimp = new PCCObject.ImportEntry(pcc, imp.header);
+            nimp.idxLink = link;
+            nimp.idxClassName = pcc.FindNameOrAdd(importpcc.getNameEntry(imp.idxClassName));
+            nimp.idxObjectName = pcc.FindNameOrAdd(importpcc.getNameEntry(imp.idxObjectName));
+            nimp.idxPackageFile = pcc.FindNameOrAdd(importpcc.getNameEntry(imp.idxPackageFile));
+            pcc.addImport(nimp);
+        }
+
+        private bool importExport(PCCObject importpcc, int n, int link)
+        {
+            PCCObject.ExportEntry ex = importpcc.Exports[n];
+            PCCObject.ExportEntry nex = new PCCObject.ExportEntry();
+            byte[] idata = ex.Data;
+            List<PropertyReader.Property> Props = PropertyReader.getPropList(importpcc, ex);
+            int start = PropertyReader.detectStart(importpcc, idata, (uint)importpcc.Exports[n].ObjectFlags);
+            int end = start;
+            if (Props.Count != 0)
+            {
+                end = Props[Props.Count - 1].offend;
+            }
+            MemoryStream res = new MemoryStream();
+            if (((uint)importpcc.Exports[n].ObjectFlags & 0x02000000) != 0)
+            {
+                byte[] stackdummy = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, //Lets hope for the best :D
+                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,};
+                res.Write(stackdummy, 0, stackdummy.Length);
+            }
+            else
+            {
+                res.Write(new byte[start], 0, start);
+            }
+            //store copy of names list in case something goes wrong
+            List<string> names = pcc.Names.ToList();
+            try
+            {
+                foreach (PropertyReader.Property p in Props)
+                {
+                    PropertyReader.ImportProperty(pcc, importpcc, p, importpcc.getObjectName(ex.idxClass), res);
+                }
+            }
+            catch (Exception exception)
+            {
+                //restore namelist
+                pcc.Names = names;
+                MessageBox.Show("Error occured while trying to import " + ex.ObjectName + " : " + exception.Message);
+                return false;
+            }
+            if (importpcc.getObjectName(ex.idxClass) == "SkeletalMesh")
+            {
+                SkeletalMesh skl = new SkeletalMesh(importpcc, n);
+                SkeletalMesh.BoneStruct bone;
+                for (int i = 0; i < skl.Bones.Count; i++)
+                {
+                    bone = skl.Bones[i];
+                    string s = importpcc.getNameEntry(bone.Name);
+                    bone.Name = pcc.FindNameOrAdd(s);
+                    skl.Bones[i] = bone;
+                }
+                SkeletalMesh.TailNamesStruct tailName;
+                for (int i = 0; i < skl.TailNames.Count; i++)
+                {
+                    tailName = skl.TailNames[i];
+                    string s = importpcc.getNameEntry(tailName.Name);
+                    tailName.Name = pcc.FindNameOrAdd(s);
+                    skl.TailNames[i] = tailName;
+                }
+                SerializingContainer container = new SerializingContainer(res);
+                container.isLoading = false;
+                skl.Serialize(container);
+            }
+            else
+            {
+                for (int i = end; i < idata.Length; i++)
+                    res.WriteByte(idata[i]);
+            }
+            nex.header = (byte[])ex.header.Clone();
+            nex.Data = res.ToArray();
+            nex.DataSize = nex.Data.Length;
+            nex.idxObjectName = pcc.FindNameOrAdd(importpcc.getNameEntry(ex.idxObjectName));
+            nex.idxLink = link;
+            nex.idxArchtype = nex.idxClass = nex.idxClassParent = 0;
+            nex.pccRef = pcc;
+            pcc.addExport(nex);
+            return true;
+        }
+
+        private void treeView1_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+            {
+                Point pt = ((TreeView)sender).PointToClient(new Point(e.X, e.Y));
+                TreeNode DestinationNode = ((TreeView)sender).GetNodeAt(pt);
+                TreeNode NewNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+                if (DestinationNode != null && DestinationNode.TreeView != NewNode.TreeView)
+                {
+                    treeView1.SelectedNode = DestinationNode;
+                    e.Effect = DragDropEffects.Copy;
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None;
+                }
             }
         }
     }
