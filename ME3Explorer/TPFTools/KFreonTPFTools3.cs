@@ -1620,10 +1620,9 @@ namespace ME3Explorer
                 if (File.GetAttributes(file).HasFlag(FileAttributes.Directory))
                 {
                     checkFiles.Remove(file);
-                    checkFiles.AddRange(Directory.GetFiles(file));
+                    checkFiles.AddRange(Directory.GetFiles(file, "*", SearchOption.AllDirectories));
                 }
             }
-
             // KFreon: Check valid files
             foreach (string file in checkFiles)
                 switch (Path.GetExtension(file).ToLowerInvariant())
