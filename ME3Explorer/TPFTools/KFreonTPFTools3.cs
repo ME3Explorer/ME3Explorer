@@ -1612,8 +1612,19 @@ namespace ME3Explorer
             List<string> ValidDrops = new List<string>();
             List<string> Invalids = new List<string>();
 
-            // KFreon: Check valid files
+            List<string> checkFiles = new List<string>();
+
+            checkFiles.AddRange(DroppedFiles);
             foreach (string file in DroppedFiles)
+            {
+                if (File.GetAttributes(file).HasFlag(FileAttributes.Directory))
+                {
+                    checkFiles.Remove(file);
+                    checkFiles.AddRange(Directory.GetFiles(file, "*", SearchOption.AllDirectories));
+                }
+            }
+            // KFreon: Check valid files
+            foreach (string file in checkFiles)
                 switch (Path.GetExtension(file).ToLowerInvariant())
                 {
                     case ".tpf":
