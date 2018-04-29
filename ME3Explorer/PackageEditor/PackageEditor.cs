@@ -1152,11 +1152,6 @@ namespace ME3Explorer
             ip.Show();
         }
 
-        private void interpretButton_Clicked(object sender, EventArgs e)
-        {
-            OpenInterpreter();
-        }
-
         private void gotoNumberButton_Clicked(object sender, EventArgs e)
         {
             if (gotonumber.Text == "")
