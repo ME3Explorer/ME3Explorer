@@ -14,7 +14,7 @@
                     <TextBlock Text="Mass Effect 3 Explorer" Foreground="#FFD8D8D8" FontSize="26" FontFamily="{StaticResource Exo-SemiBold}"/>
                     <TextBlock Text="{Binding Source={x:Static local:App.Version}}" Foreground="White" FontSize="26" 
                                FontFamily="{StaticResource TitilliumWeb-Regular}" HorizontalAlignment="Center" Margin="0,-6,0,0"/>
-                    <TextBlock Text="Copyright (c) 2011-2016 ME3Explorer Team" FontFamily="{StaticResource TitilliumWeb-SemiBold}" Foreground="#FFD8D8D8"
+                    <TextBlock Text="Copyright (c) 2011-2018 ME3Explorer Team" FontFamily="{StaticResource TitilliumWeb-SemiBold}" Foreground="#FFD8D8D8"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
