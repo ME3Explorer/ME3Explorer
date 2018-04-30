@@ -14,13 +14,6 @@ namespace ME3Explorer
 {
     public partial class PackageEditor
     {
-        private void dEBUGExport2DAToExcelFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-
-
-
-        }
 
         private void findExportsWithSerialSizeMismatchToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -43,12 +36,6 @@ namespace ME3Explorer
             {
                 MessageBox.Show("No exports have serial size mismatches.");
             }
-        }
-
-        private void dEBUGAccessME3AppendsTableToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ME3Package me3 = (ME3Package)pcc;
-            var offset = me3.DependsOffset;
         }
 
         private void dEBUGEnumerateAllClassesToolStripMenuItem_Click(object sender, EventArgs e)
