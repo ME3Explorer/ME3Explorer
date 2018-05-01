@@ -912,6 +912,10 @@ Floats*/
                         Name = pos.ToString(),
                         Tag = NodeType.Unknown
                     });
+                    topLevelTree.Nodes.Add(new TreeNode($"The stream offset to this data will be automatically updated when this file is saved.")
+                    {
+                        Tag = NodeType.Unknown
+                    });
                 }
             }
             catch (Exception ex)
@@ -1023,9 +1027,13 @@ Floats*/
                 pos += 4;
                 if (pos < data.Length && export.GetProperty<NameProperty>("Filename") == null)
                 {
-                    topLevelTree.Nodes.Add(new TreeNode($"{pos:X4} Embedded sound data. Can be extracted with Soundplorer")
+                    topLevelTree.Nodes.Add(new TreeNode($"{pos:X4} Embedded sound data. Can be extracted with Soundplorer.")
                     {
                         Name = pos.ToString(),
+                        Tag = NodeType.Unknown
+                    });
+                    topLevelTree.Nodes.Add(new TreeNode($"The stream offset to this data will be automatically updated when this file is saved.")
+                    {
                         Tag = NodeType.Unknown
                     });
                 }
