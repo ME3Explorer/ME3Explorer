@@ -20,7 +20,7 @@ namespace ME3Explorer
         }
 
         byte[] memory = new byte[0];
-        int memsize = 0;
+        int memsize;
         public List<Entry> entr;
 
         public BIKExtract()
@@ -31,18 +31,22 @@ namespace ME3Explorer
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string path = string.Empty;
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "Movies.tfc|Movies.tfc";
+            OpenFileDialog openFileDialog1 = new OpenFileDialog
+            {
+                Filter = "Movies.tfc|Movies.tfc"
+            };
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 path = openFileDialog1.FileName;
-                FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-                memsize = (int)fileStream.Length;
-                memory = new byte[memsize];
-                entr = new List<Entry>();
-                for (int i = 0; i < memsize; i++)
+                using (FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
                 {
-                    memory[i] = (byte)fileStream.ReadByte();
+                    memsize = (int)fileStream.Length;
+                    memory = new byte[memsize];
+                    entr = new List<Entry>();
+                    for (int i = 0; i < memsize; i++)
+                    {
+                        memory[i] = (byte)fileStream.ReadByte();
+                    }
                 }
                 for (int i = 0; i < memsize -3; i++)
                 {
@@ -80,7 +84,7 @@ namespace ME3Explorer
                 for (int i = 0; i < entr.Count; i++)
                     listBox1.Items.Add("#" + i + " Offset:" + entr[i].off.ToString("X") + " Size:" + entr[i].size.ToString("X"));
                 listBox2.Items.Clear();
-                listBox2.Items.Add("Loaded " + Path.GetFileName(path) + "\nCount: " + entr.Count);
+                listBox2.Items.Add("Loaded " + Path.GetFileName(path) + " \nCount: " + entr.Count);
             }
         }
 
@@ -89,25 +93,30 @@ namespace ME3Explorer
             int n = listBox1.SelectedIndex;
             if (n == -1) return;
             string path = string.Empty;
-            SaveFileDialog FileDialog1 = new SaveFileDialog();
-            FileDialog1.Filter = "BIK files (*.bik)|*.bik";
+            SaveFileDialog FileDialog1 = new SaveFileDialog
+            {
+                Filter = "BIK files (*.bik)|*.bik"
+            };
             if (FileDialog1.ShowDialog() == DialogResult.OK)
             {
                 path = FileDialog1.FileName;
-                FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write);
-                Entry t = entr[n];
-                for (int i = 0; i < t.size; i++)
-                    fileStream.WriteByte(memory[t.off + i]);
-                fileStream.Close();
+                using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write))
+                {
+                    Entry t = entr[n];
+                    for (int i = 0; i < t.size; i++)
+                        fileStream.WriteByte(memory[t.off + i]);
+                }
             }
         }
 
         private void allToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CommonOpenFileDialog m = new CommonOpenFileDialog();
-            m.IsFolderPicker = true;
-            m.EnsurePathExists = true;
-            m.Title = "Select Folder to Output to";
+            CommonOpenFileDialog m = new CommonOpenFileDialog
+            {
+                IsFolderPicker = true,
+                EnsurePathExists = true,
+                Title = "Select Folder to Output to"
+            };
             if (m.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 string dir = m.FileName;
@@ -115,13 +124,14 @@ namespace ME3Explorer
                 {
                     Entry t = entr[i];
                     string filePath = Path.Combine(dir, t.off.ToString("X") + ".bik");
-                    FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-                    listBox2.Items.Add("Extracting " + filePath);
-                    listBox2.SelectedIndex = listBox2.Items.Count - 1;
-                    Application.DoEvents(); 
-                    for (int j = 0; j < t.size; j++)
-                        fileStream.WriteByte(memory[t.off + j]);
-                    fileStream.Close();
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                    {
+                        listBox2.Items.Add("Extracting " + filePath);
+                        listBox2.SelectedIndex = listBox2.Items.Count - 1;
+                        Application.DoEvents();
+                        for (int j = 0; j < t.size; j++)
+                            fileStream.WriteByte(memory[t.off + j]);
+                    }
                 }
             }
             MessageBox.Show("Done.");
