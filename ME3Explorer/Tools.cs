@@ -256,7 +256,7 @@ namespace ME3Explorer
                 },
                 tags = new List<string> { "utility", "compress", "decompress", "pack", "unpack" },
                 subCategory = "Extractors + Repackers",
-                description = "PCC Repacker allows you to compress and decompress PCC files.",
+                description = "PCC Repacker allows you to compress and decompress PCC files.\nNew modders should be aware the toolset automatically decompresses files upon saving.",
 
             });
             set.Add(new Tool

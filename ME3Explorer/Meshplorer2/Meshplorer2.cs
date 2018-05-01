@@ -22,10 +22,8 @@ namespace ME3Explorer.Meshplorer2
         public struct EntryStruct
         {
             public string Filename;
-            public string DLCName;
             public string ObjectPath;
             public int Index;
-            public bool isDLC;
             public bool isSkeletal;
         }
 
@@ -52,82 +50,6 @@ namespace ME3Explorer.Meshplorer2
             int count = 0;
             timer1.Enabled = false;
             Entries = new List<EntryStruct>();
-            bool ScanDLC = false;
-            if (MessageBox.Show("Scan DLCs too?", "Meshplorer 2", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                ScanDLC = true;
-            if (ScanDLC)
-            {
-                #region DLC Stuff
-                string dirDLC = ME3Directory.DLCPath;
-                if (!Directory.Exists(dirDLC))
-                    DebugOutput.PrintLn("No DLC Folder found!");
-                else
-                {
-                    string[] subdirs = Directory.GetDirectories(dirDLC);
-                    string loc = Path.GetDirectoryName(Application.ExecutablePath) + "\\exec\\";
-                    Directory.CreateDirectory(loc + "temp");
-                    foreach (string DLCpath in subdirs)
-                        if (!DLCpath.StartsWith("__") && !DLCpath.StartsWith("DLC_UPD"))
-                        {
-                            string path = DLCpath + "\\CookedPCConsole\\Default.sfar";
-                            DLCBase dlcbase;
-                            try
-                            {
-                                dlcbase = new DLCBase(path);
-                                count = 0;
-                                pbar1.Maximum = dlcbase.fileList.Count;
-                                foreach (sfarFile file in dlcbase.fileList)
-                                    try
-                                    {
-                                        string filename = Path.GetFileName(file.fileName);
-                                        if (Path.GetExtension(filename).ToLower().EndsWith(".pcc"))
-                                        {
-                                            using (Stream input = File.OpenRead(path), output = File.Create(loc + "temp\\" + filename))
-                                            {
-                                                AmaroK86.MassEffect3.DLCUnpack.DecompressEntry(file, input, output, dlcbase.CompressionScheme);
-                                            }
-                                            FileInfo f = new FileInfo(loc + "temp\\" + filename);
-                                            DebugOutput.PrintLn("checking DLC: " + Path.GetFileName(DLCpath) + " File: " + filename + " Size: " + f.Length + " bytes", count % 3 == 0);
-                                            using (ME3Package pcc = MEPackageHandler.OpenME3Package(loc + "temp\\" + filename))
-                                            {
-                                                IReadOnlyList<IExportEntry> Exports = pcc.Exports;
-                                                for (int i = 0; i < Exports.Count; i++)
-                                                    if (Exports[i].ClassName == "SkeletalMesh" ||
-                                                        Exports[i].ClassName == "StaticMesh")
-                                                    {
-                                                        EntryStruct ent = new EntryStruct();
-                                                        ent.DLCName = Path.GetFileName(DLCpath);
-                                                        ent.Filename = filename;
-                                                        ent.Index = i;
-                                                        ent.isDLC = true;
-                                                        ent.ObjectPath = Exports[i].GetFullPath;
-                                                        ent.isSkeletal = Exports[i].ClassName == "SkeletalMesh";
-                                                        Entries.Add(ent);
-                                                    } 
-                                            }
-                                            File.Delete(loc + "temp\\" + filename);
-                                        }
-                                        if (count % 3 == 0)
-                                        {
-                                            pbar1.Value = count;
-                                            Application.DoEvents();
-                                        }
-                                        count++;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        DebugOutput.PrintLn("=====ERROR=====\n" + ex.ToString() + "\n=====ERROR=====");
-                                    }
-                            }
-                            catch (Exception ex)
-                            {
-                                DebugOutput.PrintLn("=====ERROR=====\n" + ex.ToString() + "\n=====ERROR=====");
-                            }
-                        }
-                    Directory.Delete(loc + "temp", true);
-                }
-                #endregion
-            }
             #region Basegame Stuff
             string dir = ME3Directory.cookedPath;
             string[] files = Directory.GetFiles(dir,"*.pcc");            
@@ -145,10 +67,8 @@ namespace ME3Explorer.Meshplorer2
                                 Exports[i].ClassName == "StaticMesh")
                             {
                                 EntryStruct ent = new EntryStruct();
-                                ent.DLCName = "";
                                 ent.Filename = Path.GetFileName(file);
                                 ent.Index = i;
-                                ent.isDLC = false;
                                 ent.ObjectPath = Exports[i].GetFullPath;
                                 ent.isSkeletal = Exports[i].ClassName == "SkeletalMesh";
                                 Entries.Add(ent);
@@ -202,58 +122,29 @@ namespace ME3Explorer.Meshplorer2
             {
                 foreach (EntryStruct e in Entries)
                 {
-                    if (!e.isDLC)
+                    int f = -1;
+                    for (int i = 0; i < treeView1.Nodes.Count; i++)
+                        if (treeView1.Nodes[i].Text == e.Filename)
+                            f = i;
+                    string pre = "SKM";
+                    if (!e.isSkeletal)
+                        pre = "STM";
+                    if (f == -1)
                     {
-                        int f = -1;
-                        for (int i = 0; i < treeView1.Nodes.Count; i++)
-                            if (treeView1.Nodes[i].Text == e.Filename)
-                                f = i;
-                        string pre = "SKM";
-                        if (!e.isSkeletal)
-                            pre = "STM";
-                        if (f == -1)
-                        {
-                            TreeNode t = new TreeNode(e.Filename);
-                            t.Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
-                            treeView1.Nodes.Add(t);
-                        }
-                        else
-                        {
-                            treeView1.Nodes[f].Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
-                        }
-                        if (count % 100 == 0)
-                        {
-                            pbar1.Value = count;
-                            Application.DoEvents();
-                        }
-                        count++;
+                        TreeNode t = new TreeNode(e.Filename);
+                        t.Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
+                        treeView1.Nodes.Add(t);
                     }
                     else
                     {
-                        int f = -1;
-                        for (int i = 0; i < treeView1.Nodes.Count; i++)
-                            if (treeView1.Nodes[i].Text == e.DLCName + "::" + e.Filename)
-                                f = i;
-                        string pre = "SKM";
-                        if (!e.isSkeletal)
-                            pre = "STM";
-                        if (f == -1)
-                        {
-                            TreeNode t = new TreeNode(e.DLCName + "::" + e.Filename);
-                            t.Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
-                            treeView1.Nodes.Add(t);
-                        }
-                        else
-                        {
-                            treeView1.Nodes[f].Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
-                        }
-                        if (count % 100 == 0)
-                        {
-                            pbar1.Value = count;
-                            Application.DoEvents();
-                        }
-                        count++;
+                        treeView1.Nodes[f].Nodes.Add(count.ToString(), pre + "#" + e.Index + " : " + e.ObjectPath);
                     }
+                    if (count % 100 == 0)
+                    {
+                        pbar1.Value = count;
+                        Application.DoEvents();
+                    }
+                    count++;
                 }
             }
             treeView1.Visible = true;
@@ -278,13 +169,10 @@ namespace ME3Explorer.Meshplorer2
                 foreach(EntryStruct es in Entries)
                 {
                     WriteString(fs, es.Filename);
-                    WriteString(fs, es.DLCName);
+                    WriteString(fs, "");
                     WriteString(fs, es.ObjectPath);
                     fs.Write(BitConverter.GetBytes(es.Index), 0, 4);
-                    if (es.isDLC)
-                        fs.WriteByte(1);
-                    else
-                        fs.WriteByte(0);
+                    fs.WriteByte(0);
                     if (es.isSkeletal)
                         fs.WriteByte(1);
                     else
@@ -346,78 +234,20 @@ namespace ME3Explorer.Meshplorer2
                     if (Int32.TryParse(t.Name, out i))
                     {
                         EntryStruct en = Entries[i];
-                        if (!en.isDLC)
+                        ME3Package pcc = MEPackageHandler.OpenME3Package(ME3Directory.cookedPath + en.Filename);
+                        if (en.isSkeletal)
                         {
-                            ME3Package pcc = MEPackageHandler.OpenME3Package(ME3Directory.cookedPath + en.Filename);
-                            if (en.isSkeletal)
+                            SkeletalMesh skmesh = new SkeletalMesh(pcc, en.Index); // TODO: pass device
+                            preview = new ModelPreview(view.Device, skmesh, view.TextureCache);
+                            CenterView();
+                            treeView2.Nodes.Clear();
+                            if (previewWithTreeToolStripMenuItem.Checked)
                             {
-                                SkeletalMesh skmesh = new SkeletalMesh(pcc, en.Index); // TODO: pass device
-                                preview = new ModelPreview(view.Device, skmesh, view.TextureCache);
-                                CenterView();
-                                treeView2.Nodes.Clear();
-                                if (previewWithTreeToolStripMenuItem.Checked)
-                                {
-                                    treeView2.Visible = false;
-                                    Application.DoEvents();
-                                    treeView2.Nodes.Add(skmesh.ToTree());
-                                    treeView2.Visible = true;
-                                }
+                                treeView2.Visible = false;
+                                Application.DoEvents();
+                                treeView2.Nodes.Add(skmesh.ToTree());
+                                treeView2.Visible = true;
                             }
-                            else
-                            {
-
-                            }
-                        }
-                        else
-                        {
-                            string loc = Path.GetDirectoryName(Application.ExecutablePath) + "\\exec\\";
-                            string dirDLC = ME3Directory.DLCPath;
-                            dirDLC += en.DLCName;
-                            dirDLC += "\\CookedPCConsole\\Default.sfar";
-                            DLCBase dlc = new DLCBase(dirDLC);
-                            foreach (sfarFile file in dlc.fileList)
-                                try
-                                {
-                                    string filename = Path.GetFileName(file.fileName);
-                                    if (Path.GetExtension(filename).ToLower().EndsWith(".pcc") && filename == en.Filename)
-                                    {
-                                        using (Stream input = File.OpenRead(dirDLC), output = File.Create(loc + filename))
-                                        {
-                                            AmaroK86.MassEffect3.DLCUnpack.DecompressEntry(file, input, output, dlc.CompressionScheme);
-                                        }
-                                        if (File.Exists(loc + filename))
-                                        {
-                                            try
-                                            {
-                                                ME3Package pcc = MEPackageHandler.OpenME3Package(loc + filename);
-                                                if (en.isSkeletal)
-                                                {
-                                                    SkeletalMesh skmesh = new SkeletalMesh(pcc, en.Index);
-                                                    CenterView();
-                                                    treeView2.Nodes.Clear();
-                                                    if (previewWithTreeToolStripMenuItem.Checked)
-                                                    {
-                                                        treeView2.Visible = false;
-                                                        Application.DoEvents();
-                                                        treeView2.Nodes.Add(skmesh.ToTree());
-                                                        treeView2.Visible = true;
-                                                    }
-                                                }
-                                                else
-                                                {
-
-                                                }
-                                            }
-                                            catch (Exception)
-                                            {
-                                            }
-                                            File.Delete(loc + filename);
-                                        }
-                                    }
-                                }
-                                catch (Exception)
-                                {
-                                }
                         }
                     }
                 }
@@ -442,11 +272,10 @@ namespace ME3Explorer.Meshplorer2
                 {
                     EntryStruct en = new EntryStruct();
                     en.Filename = ReadString(fs);
-                    en.DLCName = ReadString(fs);
+                    string _ = ReadString(fs);
                     en.ObjectPath = ReadString(fs);
                     en.Index = ReadInt(fs);
                     byte b = (byte)fs.ReadByte();
-                    en.isDLC = b == 1;
                     b = (byte)fs.ReadByte();
                     en.isSkeletal = b == 1;
                     Entries.Add(en);
@@ -503,62 +332,14 @@ namespace ME3Explorer.Meshplorer2
                     if (!Int32.TryParse(t1.Name, out o))
                         return;
                     en = Entries[o];
-                    if (!en.isDLC)
+                    if (en.isSkeletal)
                     {
-                        if (en.isSkeletal)
-                        {
-                            pcc = MEPackageHandler.OpenME3Package(ME3Directory.cookedPath + en.Filename);
-                            skm = new SkeletalMesh(pcc, en.Index); // TODO: pass device
-                        }
-                        else
-                        {
-                            return;
-                        }
+                        pcc = MEPackageHandler.OpenME3Package(ME3Directory.cookedPath + en.Filename);
+                        skm = new SkeletalMesh(pcc, en.Index); // TODO: pass device
                     }
                     else
                     {
-                        string dirDLC = ME3Directory.DLCPath;
-                        dirDLC += en.DLCName;
-                        dirDLC += "\\CookedPCConsole\\Default.sfar";
-                        DLCBase dlc = new DLCBase(dirDLC);
-                        foreach (sfarFile file in dlc.fileList)
-                            try
-                            {
-                                string filename = Path.GetFileName(file.fileName);
-                                if (Path.GetExtension(filename).ToLower().EndsWith(".pcc") && filename == en.Filename)
-                                {
-                                    if (File.Exists(loc + "dlc.pcc"))
-                                        File.Delete(loc + "dlc.pcc");
-                                    using (Stream input = File.OpenRead(dirDLC), output = File.Create(loc + "dlc.pcc"))
-                                    {
-                                        AmaroK86.MassEffect3.DLCUnpack.DecompressEntry(file, input, output, dlc.CompressionScheme);
-                                    }
-                                    if (File.Exists(loc + "dlc.pcc"))
-                                    {
-                                        try
-                                        {
-                                            if (en.isSkeletal)
-                                            {
-                                                pcc = MEPackageHandler.OpenME3Package(loc + "dlc.pcc");
-                                                skm = new SkeletalMesh(pcc, en.Index);
-                                                break;
-                                            }
-                                            else
-                                            {
-                                                return;
-                                            }
-                                        }
-                                        catch (Exception)
-                                        {
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                return;
-                            }
+                        return;
                     }
                 }
                 else
@@ -666,10 +447,7 @@ namespace ME3Explorer.Meshplorer2
                 mem.Write(con.Memory.ToArray(), 0, (int)con.Memory.Length);
                 pcc.Exports[en.Index].Data = mem.ToArray();
                 pcc.save();
-                if (!en.isDLC)
-                    MessageBox.Show("Done");
-                else
-                    MessageBox.Show("Done. The file is now in following folder, please replace it back to DLC :\n" + loc + "dlc.pcc");
+                MessageBox.Show("Done");
                 globalTreeToolStripMenuItem.Visible =
                 optionsToolStripMenuItem.Visible =
                 transferToolStripMenuItem.Visible =

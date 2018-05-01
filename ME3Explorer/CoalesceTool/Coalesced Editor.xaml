@@ -5,7 +5,7 @@
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		mc:Ignorable="d" xmlns:local="clr-namespace:MassEffect3.CoalesceTool"
 		Title="Coalesced Editor" MinHeight="300" MinWidth="600" d:DesignHeight="300" d:DesignWidth="600" SizeToContent="WidthAndHeight"
-		d:DataContext="{d:DesignInstance local:CoalescedEditor}">
+		d:DataContext="{d:DesignInstance local:CoalescedEditor}" Icon="/ME3Explorer;component/Resources/coalesced_editor_newB.ico">
 	<Window.CommandBindings>
 		<CommandBinding Command="local:Commands.Browse" CanExecute="Browse_OnCanExecute" Executed="Browse_OnExecuted" />
         <CommandBinding Command="local:Commands.ConvertTo" CanExecute="ConvertTo_OnCanExecute" Executed="ConvertTo_OnExecuted" />

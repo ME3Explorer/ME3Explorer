@@ -2528,7 +2528,11 @@ Floats*/
 
             int binarystart = findEndOfProps();
             //find start of class binary (end of props). This should 
-
+            if (binarystart >= data.Length)
+            {
+                treeView1.Nodes.Add(new TreeNode("No Binary Data"));
+                return;
+            }
 
 
             TreeNode topLevelTree = new TreeNode($"0000 : {export.ObjectName}")
