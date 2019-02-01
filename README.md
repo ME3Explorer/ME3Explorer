@@ -2,6 +2,8 @@
 
 ME3Explorer is a fan-made modding toolkit for _Mass Effect 3_ on the PC. It has limited support for both _Mass Effect_ and _Mass Effect 2_. For more details, [check out our website](http://me3explorer.github.io/).
 
+**No longer under development (2-2-2019) :( [See here](http://me3explorer.proboards.com/thread/285/comm-official-end-development-me3explorer) for details, and fork as you wish :)**
+
 ## Downloads
 The latest stable can be downloaded on [Nexusmods](http://www.nexusmods.com/masseffect3/mods/409/?) or via the download button below:
 
